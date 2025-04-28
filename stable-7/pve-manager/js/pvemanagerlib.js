@@ -9228,7 +9228,7 @@ Ext.define('PVE.form.iScsiProviderSelector', {
     alias: ['widget.pveiScsiProviderSelector'],
     comboItems: [
 	['comstar', 'Comstar'],
-    ['freenas', 'FreeNAS/TrueNAS API'],
+    ['truenas', 'TrueNAS/TrueNAS API'],
 	['istgt', 'istgt'],
 	['iet', 'IET'],
 	['LIO', 'LIO'],
@@ -58026,14 +58026,14 @@ Ext.define('PVE.storage.ZFSInputPanel', {
 	parent: null,
 	data: {
 isComstar: true,
-	    isFreeNAS: false,
+	    isTrueNAS: false,
 	    isLIO: false,
 	    isToken: false,
 	    hasWriteCacheOption: true,
 	},
 formulas: {
             hideUsername: function(get) {
-                return (!get('isFreeNAS') || !(get('isFreeNAS') && !get('isToken')));
+                return (!get('isTrueNAS') || !(get('isTrueNAS') && !get('isToken')));
             },
 	},
     },
@@ -58053,20 +58053,20 @@ var me = this;
 	    var vm = this.getViewModel();
 	    vm.set('isLIO', newVal === 'LIO');
 	    vm.set('isComstar', newVal === 'comstar');
-	    vm.set('isFreeNAS', newVal === 'freenas');
-        vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'freenas' || newVal === 'istgt');
-        if (newVal !== 'freenas') {
-            me.lookupReference('freenas_use_ssl_field').setValue(false);
+	    vm.set('isTrueNAS', newVal === 'truenas');
+        vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'truenas' || newVal === 'istgt');
+        if (newVal !== 'truenas') {
+            me.lookupReference('truenas_use_ssl_field').setValue(false);
             me.lookupReference('truenas_token_auth_field').setValue(false);
-            me.lookupReference('freenas_apiv4_host_field').setValue('');
-            me.lookupReference('freenas_user_field').setValue('');
-            me.lookupReference('freenas_user_field').allowBlank = true;
+            me.lookupReference('truenas_apiv4_host_field').setValue('');
+            me.lookupReference('truenas_user_field').setValue('');
+            me.lookupReference('truenas_user_field').allowBlank = true;
             me.lookupReference('truenas_secret_field').setValue('');
             me.lookupReference('truenas_secret_field').allowBlank = true;
             me.lookupReference('truenas_confirm_secret_field').setValue('');
             me.lookupReference('truenas_confirm_secret_field').allowBlank = true;
         } else {
-            me.lookupReference('freenas_user_field').allowBlank = false;
+            me.lookupReference('truenas_user_field').allowBlank = false;
             me.lookupReference('truenas_secret_field').allowBlank = false;
             me.lookupReference('truenas_confirm_secret_field').allowBlank = false;
         }
@@ -58075,9 +58075,9 @@ var me = this;
         var me = this;
         var vm = me.getViewModel();
         vm.set('isToken', newVal);
-        me.lookupReference('freenas_user_field').allowBlank = newVal;
+        me.lookupReference('truenas_user_field').allowBlank = newVal;
         if (newVal) {
-            me.lookupReference('freenas_user_field').setValue('');
+            me.lookupReference('truenas_user_field').setValue('');
         }
 	},
     },
@@ -58091,9 +58091,9 @@ var me = this;
 
 	values.nowritecache = values.writecache ? 0 : 1;
 	delete values.writecache;
-    console.warn(values.freenas_password);
-	if (values.freenas_password) {
-	    values.truenas_secret = values.freenas_password;
+    console.warn(values.truenas_password);
+	if (values.truenas_password) {
+	    values.truenas_secret = values.truenas_password;
 	}
 	console.warn(values.truenas_secret);
 
@@ -58101,8 +58101,8 @@ var me = this;
     },
 
     setValues: function(values) {
-        if (values.freenas_password) {
-            values.truenas_secret = values.freenas_password;
+        if (values.truenas_password) {
+            values.truenas_secret = values.truenas_password;
         }
         values.truenas_confirm_secret = values.truenas_secret;
         values.writecache = values.nowritecache ? 0 : 1;
@@ -58121,7 +58121,7 @@ var me = this;
         editable: true,
         emptyText: Proxmox.Utils.noneText,
         bind: {
-            hidden: '{!isFreeNAS}'
+            hidden: '{!isTrueNAS}'
         },
         fieldLabel: gettext('API Password'),
         change: function(f, value) {
@@ -58141,7 +58141,7 @@ var me = this;
         submitValue: false,
         emptyText: Proxmox.Utils.noneText,
         bind: {
-            hidden: '{!isFreeNAS}'
+            hidden: '{!isTrueNAS}'
         },
         fieldLabel: gettext('Confirm API Password'),
         validator: function(value) {
@@ -58194,12 +58194,12 @@ var me = this;
 },
 	    {
 		xtype: 'proxmoxcheckbox',
-		name: 'freenas_use_ssl',
-		reference: 'freenas_use_ssl_field',
-		inputId: 'freenas_use_ssl_field',
+		name: 'truenas_use_ssl',
+		reference: 'truenas_use_ssl_field',
+		inputId: 'truenas_use_ssl_field',
 		checked: false,
 		bind: {
-		    hidden: '{!isFreeNAS}'
+		    hidden: '{!isTrueNAS}'
 		},
 		uncheckedValue: 0,
 		fieldLabel: gettext('API use SSL'),
@@ -58215,26 +58215,26 @@ var me = this;
 			if (newValue === true) {
 			    tnsecret.labelEl.update('API Token');
 			    tnconfirmsecret.labelEl.update('Confirm API Token');
-			    me.lookupReference('freenas_user_field').setValue('');
-			    me.lookupReference('freenas_user_field').allowBlank = true;
+			    me.lookupReference('truenas_user_field').setValue('');
+			    me.lookupReference('truenas_user_field').allowBlank = true;
 			} else {
 			    tnsecret.labelEl.update('API Password');
 			    tnconfirmsecret.labelEl.update('Confirm API Password');
-			    me.lookupReference('freenas_user_field').allowBlank = false;
+			    me.lookupReference('truenas_user_field').allowBlank = false;
 			}
 		    },
 		},
 		bind: {
-		    hidden: '{!isFreeNAS}'
+		    hidden: '{!isTrueNAS}'
 		},
 		uncheckedValue: 0,
 		fieldLabel: gettext('API Token Auth'),
 	    },
 	    {
 		xtype: 'textfield',
-		name: 'freenas_user',
-		reference: 'freenas_user_field',
-		inputId: 'freenas_user_field',
+		name: 'truenas_user',
+		reference: 'truenas_user_field',
+		inputId: 'truenas_user_field',
 		value: '',
 		fieldLabel: gettext('API Username'),
 		bind: {
@@ -58288,13 +58288,13 @@ var me = this;
 	    },
 	    {
 		xtype: 'proxmoxtextfield',
-		name: 'freenas_apiv4_host',
-		reference: 'freenas_apiv4_host_field',
+		name: 'truenas_apiv4_host',
+		reference: 'truenas_apiv4_host_field',
 		value: '',
 		editable: true,
 		emptyText: Proxmox.Utils.noneText,
 		bind: {
-		    hidden: '{!isFreeNAS}'
+		    hidden: '{!isTrueNAS}'
 		},
 		fieldLabel: gettext('API IPv4 Host'),
 	    },

@@ -4,7 +4,7 @@
      alias: ['widget.pveiScsiProviderSelector'],
      comboItems: [
  	['comstar', 'Comstar'],
-+	['freenas', 'FreeNAS-API'],
++	['truenas', 'TrueNAS-API'],
  	[ 'istgt', 'istgt'],
  	[ 'iet', 'IET'],
  	[ 'LIO', 'LIO']
@@ -12,7 +12,7 @@
  	data: {
  	    isLIO: false,
  	    isComstar: true,
-+	    isFreeNAS: false,
++	    isTrueNAS: false,
  	    hasWriteCacheOption: true
  	}
      },
@@ -25,14 +25,14 @@
  	    vm.set('isLIO', newVal === 'LIO');
  	    vm.set('isComstar', newVal === 'comstar');
 -	    vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'istgt');
-+	    vm.set('isFreeNAS', newVal === 'freenas');
-+	    vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'freenas' || newVal === 'istgt');
-+	    if (newVal !== 'freenas') {
-+		me.lookupReference('freenas_use_ssl_field').setValue(false);
-+		me.lookupReference('freenas_apiv4_host_field').setValue('');
-+		me.lookupReference('freenas_user_field').setValue('');
-+		me.lookupReference('freenas_password_field').setValue('');
-+		me.lookupReference('freenas_confirmpw_field').setValue('');
++	    vm.set('isTrueNAS', newVal === 'truenas');
++	    vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'truenas' || newVal === 'istgt');
++	    if (newVal !== 'truenas') {
++		me.lookupReference('truenas_use_ssl_field').setValue(false);
++		me.lookupReference('truenas_apiv4_host_field').setValue('');
++		me.lookupReference('truenas_user_field').setValue('');
++		me.lookupReference('truenas_password_field').setValue('');
++		me.lookupReference('truenas_confirmpw_field').setValue('');
 +	    }
  	}
      },
@@ -41,7 +41,7 @@
      },
  
      setValues: function diff(values) {
-+	values.freenas_confirmpw = values.freenas_password;
++	values.truenas_confirmpw = values.truenas_password;
  	values.writecache = values.nowritecache ? 0 : 1;
  	this.callParent([values]);
      },
@@ -73,23 +73,23 @@
 +	    },
 +	    {
 +		xtype: 'proxmoxcheckbox',
-+		name: 'freenas_use_ssl',
-+		reference: 'freenas_use_ssl_field',
-+		inputId: 'freenas_use_ssl_field',
++		name: 'truenas_use_ssl',
++		reference: 'truenas_use_ssl_field',
++		inputId: 'truenas_use_ssl_field',
 +		checked: false,
-+		bind: { hidden: '{!isFreeNAS}' },
++		bind: { hidden: '{!isTrueNAS}' },
 +		uncheckedValue: 0,
 +		fieldLabel: gettext('API use SSL')
 +	    },
 +	    {
 +		xtype: 'textfield',
-+		name: 'freenas_user',
-+		reference: 'freenas_user_field',
-+		inputId: 'freenas_user_field',
++		name: 'truenas_user',
++		reference: 'truenas_user_field',
++		inputId: 'truenas_user_field',
 +		value: '',
 +		allowBlank: false,
 +		fieldLabel: gettext('API Username'),
-+		bind: { hidden: '{!isFreeNAS}' },
++		bind: { hidden: '{!isTrueNAS}' },
  	    }
  	];
  
@@ -113,38 +113,38 @@
 +	    },
 +	    {
 +		xtype: 'proxmoxtextfield',
-+		name: 'freenas_apiv4_host',
-+		reference: 'freenas_apiv4_host_field',
++		name: 'truenas_apiv4_host',
++		reference: 'truenas_apiv4_host_field',
 +		value: '',
 +		editable: true,
 +		allowBlank: true,
 +		emptyText: Proxmox.Utils.noneText,
-+		bind: { hidden: '{!isFreeNAS}' },
++		bind: { hidden: '{!isTrueNAS}' },
 +		fieldLabel: gettext('API IPv4 Host'),
 +		allowBlank: true
 +	    },
 +	    {
 +		xtype: 'proxmoxtextfield',
-+		name: 'freenas_password',
-+		reference: 'freenas_password_field',
++		name: 'truenas_password',
++		reference: 'truenas_password_field',
 +		inputType: me.isCreate ? '' : 'password',
 +		value: '',
 +		editable: true,
 +		deleteEmpty: true,
 +		allowBlank: false,
 +		emptyText: Proxmox.Utils.noneText,
-+		bind: { hidden: '{!isFreeNAS}' },
++		bind: { hidden: '{!isTrueNAS}' },
 +		fieldLabel: gettext('API Password'),
 +		change: function(f, value) {
 +		    if (f.rendered) {
-+			f.up().down('field[name=freenas_confirmpw]').validate();
++			f.up().down('field[name=truenas_confirmpw]').validate();
 +		    }
 +		}
 +	    },
 +	    {
 +		xtype: 'proxmoxtextfield',
-+		name: 'freenas_confirmpw',
-+		reference: 'freenas_confirmpw_field',
++		name: 'truenas_confirmpw',
++		reference: 'truenas_confirmpw_field',
 +		inputType: me.isCreate ? '' : 'password',
 +		value: '',
 +		editable: true,
@@ -153,10 +153,10 @@
 -		fieldLabel: gettext('Target portal group')
 +		submitValue: false,
 +		emptyText: Proxmox.Utils.noneText,
-+		bind: { hidden: '{!isFreeNAS}' },
++		bind: { hidden: '{!isTrueNAS}' },
 +		fieldLabel: gettext('Confirm Password'),
 +		validator: function(value) {
-+		    var pw = this.up().down('field[name=freenas_password]').getValue();
++		    var pw = this.up().down('field[name=truenas_password]').getValue();
 +		    if (pw !== value) {
 +			return "Passwords do not match!";
 +		    }

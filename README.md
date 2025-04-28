@@ -13,12 +13,6 @@
   
   - Fork repository to begin update work 
   - Remove donation link from readme
-  - TODO: Change FreeNAS references to TrueNAS
-  - TODO: Set up Cloudsmith repo
-  - TODO: Optimize with ChatGPT/Copilot
-  - TODO: Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
-  - TODO: Update REST API for TrueNAS due to deprecation https://github.com/TheGrandWazoo/freenas-proxmox/issues/205
-
   
   </details>
 
@@ -46,6 +40,15 @@
 ## Roadmap
 <details><summary>Roadmap details</summary>
 
+* Change FreeNAS references to TrueNAS - <i> Implemented, Pending Testing</i>.
+* Fork freenas-proxmox-packer and set up - <i> Completed, Pending Testing</i>.
+* Port wiki to new fork
+* Set up new Cloudsmith repo for new fork
+* Optimize code with ChatGPT/Copilot
+* Fix iSCSI errors
+  * Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
+* Update REST API to fix deprecations
+  * https://github.com/TheGrandWazoo/freenas-proxmox/issues/205
 * Update the documentation - <i>In Progress</i>.
   * Restructure the main README.md for better readability. 
   * Add some screenshots.
@@ -62,8 +65,6 @@
   * Remove the need for git dependency.
 * Change to LWP::UserAgent
   * Remove dependency of the REST::Client because LWP::UserAgent is already installed and used by Proxmox VE.
-* Change from FreeNAS to TrueNAS - <i>In Progress</i>.
-  * Cleanup the FreeNAS repo and name everything to TrueNAS to be inline with the product.
 * Add API key for direct TrueNAS services - <i>In Progress</i>.
   * Will be a new enable field and API key and will only be used by the plugin.
   * You will still need the SSH keys, username, and password because of Proxmox VE using `iscsiadm` to get the list of disks.
@@ -152,7 +153,7 @@
  Then issue the following to install the package
  ```bash
  apt update
- apt install freenas-proxmox
+ apt install truenas-proxmox
  ```
 
  </details>
@@ -174,7 +175,7 @@
 <details><summary>If you wish not to use the package you may remove it at anytime with the following:</summary>
 
  ```
-  apt [remove|purge] freenas-proxmox
+  apt [remove|purge] truenas-proxmox
  ```
 
  This will place you back to a normal and non-patched Proxmox VE install.

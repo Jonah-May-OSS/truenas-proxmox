@@ -1,4 +1,4 @@
-name: Dispatch build of the freenas-proxmox plugin package
+name: Dispatch build of the truenas-proxmox plugin package
 
 on:
   push:
@@ -8,10 +8,10 @@ jobs:
     name: Dispatch to the build and packager workflow.
     runs-on: ubuntu-latest
     steps:
-      - name: Send dispatch request to 'freenas-proxmox-packer' repo.
+      - name: Send dispatch request to 'truenas-proxmox-packer' repo.
         uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
-          repository: TheGrandWazoo/freenas-proxmox-packer
+          repository: Jonah-May-OSS/truenas-proxmox-packer
           event-type: build_push
           client-payload: '{"ref" : "${{ github.ref }}", "sha": "${{ github.sha }}"}'
