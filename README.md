@@ -6,8 +6,6 @@ Latest beta: [![Latest beta version of 'truenas-proxmox'](https://api.cloudsmith
 
 Latest nightly: [![Latest nightly version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-snapshots/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-snapshots/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
 
-## 📢: ATTENTION 2023-08-16 📢: New repos are now online at [Cloudsmith](#new-installs).
-
 ## Activity
 
 <details>
