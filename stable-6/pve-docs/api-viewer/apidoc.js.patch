@@ -4,26 +4,26 @@
                             "type" : "string",
                             "typetext" : "<string>"
                          },
-+                        "freenas_user" : {
-+                           "description" : "FreeNAS user for API access",
++                        "truenas_user" : {
++                           "description" : "TrueNAS user for API access",
 +                           "optional" : 1,
 +                           "type" : "string",
 +                           "typetext" : "<string>"
 +                        },
-+                        "freenas_password" : {
-+                           "description" : "FreeNAS password for API access",
++                        "truenas_password" : {
++                           "description" : "TrueNAS password for API access",
 +                           "optional" : 1,
 +                           "type" : "string",
 +                           "typetext" : "<string>"
 +                        },
-+                        "freenas_use_ssl" : {
-+                           "description" : "FreeNAS API access via SSL",
++                        "truenas_use_ssl" : {
++                           "description" : "TrueNAS API access via SSL",
 +                           "optional" : 1,
 +                           "type" : "boolean",
 +                           "typetext" : "<boolean>"
 +                        },
-+                        "freenas_apiv4_host" : {
-+                           "description" : "FreeNAS API Host via IPv4",
++                        "truenas_apiv4_host" : {
++                           "description" : "TrueNAS API Host via IPv4",
 +                           "format" : "address",
 +                           "optional" : 1,
 +                           "type" : "string",
@@ -50,26 +50,26 @@
                       "type" : "string",
                       "typetext" : "<string>"
 +                  },
-+                  "freenas_user" : {
-+                     "description" : "FreeNAS user for API access",
++                  "truenas_user" : {
++                     "description" : "TrueNAS user for API access",
 +                     "optional" : 1,
 +                     "type" : "string",
 +                     "typetext" : "<string>"
 +                  },
-+                  "freenas_password" : {
-+                     "description" : "FreeNAS password for API access",
++                  "truenas_password" : {
++                     "description" : "TrueNAS password for API access",
 +                     "optional" : 1,
 +                     "type" : "string",
 +                     "typetext" : "<string>"
 +                  },
-+                  "freenas_use_ssl" : {
-+                     "description" : "FreeNAS API access via SSL",
++                  "truenas_use_ssl" : {
++                     "description" : "TrueNAS API access via SSL",
 +                     "optional" : 1,
 +                     "type" : "boolean",
 +                     "typetext" : "<boolean>"
 +                  },
-+                  "freenas_apiv4_host" : {
-+                     "description" : "FreeNAS API Host via IPv4",
++                  "truenas_apiv4_host" : {
++                     "description" : "TrueNAS API Host via IPv4",
 +                     "format" : "address",
 +                     "optional" : 1,
 +                     "type" : "string",
