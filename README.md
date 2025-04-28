@@ -39,6 +39,7 @@
 
 ## Roadmap
 <details><summary>Roadmap details</summary>
+
 * Change FreeNAS references to TrueNAS - <i> Implemented, Pending Testing</i>.
 * Fork freenas-proxmox-packer and set up - <i> Completed, Pending Testing</i>.
 * Port wiki to new fork
