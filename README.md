@@ -45,6 +45,8 @@
 * Fork freenas-proxmox-packer and set up - <i> Completed, Pending Testing</i>.
 * Port wiki to new fork
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
+  * Update static references in the packer YAML
+  * Update static references in the control files
 * Optimize code with ChatGPT/Copilot
 * Fix iSCSI errors
   * Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
@@ -105,7 +107,7 @@
  # Site: https://cloudsmith.io
  # Repository: Jonah May OSS / truenas-proxmox
  # Description: TrueNAS plugin for Proxmox VE - Production
- deb [signed-by=${keyring_location}] https://dl.cloudsmith.io/public/ksatechnologies/truenas-proxmox/deb/debian any-version main
+ deb [signed-by=${keyring_location}] https://dl.cloudsmith.io/public/jonah-may-oss/truenas-proxmox/deb/debian any-version main
 
  EOF
  ```
@@ -140,7 +142,7 @@
  # Site: https://cloudsmith.io
  # Repository: Jonah May OSS / truenas-proxmox-testing
  # Description: TrueNAS plugin for Proxmox VE - Testing
- deb [signed-by=${keyring_location}] https://dl.cloudsmith.io/public/ksatechnologies/truenas-proxmox-testing/deb/debian any-version main
+ deb [signed-by=${keyring_location}] https://dl.cloudsmith.io/public/jonah-may-oss/truenas-proxmox-testing/deb/debian any-version main
 
  EOF
  ```
