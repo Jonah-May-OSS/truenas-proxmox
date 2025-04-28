@@ -4,7 +4,7 @@
      alias: ['widget.pveiScsiProviderSelector'],
      comboItems: [
  	['comstar', 'Comstar'],
-+	['freenas', 'FreeNAS-API'],
++	['truenas', 'TrueNAS-API'],
  	[ 'istgt', 'istgt'],
  	[ 'iet', 'IET']
      ]
@@ -16,18 +16,18 @@
 +	    },
 +	    {
 +		xtype: 'proxmoxcheckbox',
-+		name: 'freenas_use_ssl',
++		name: 'truenas_use_ssl',
 +		checked: false,
 +		uncheckedValue: 0,
-+		hidden: me.iscsiprovider !== "freenas",
-+		fieldLabel: gettext('FreeNAS API use SSL')
++		hidden: me.iscsiprovider !== "truenas",
++		fieldLabel: gettext('TrueNAS API use SSL')
 +	    },
 +	    {
 +		xtype: me.isCreate ? 'textfield' : 'displayfield',
-+		name: 'freenas_user',
++		name: 'truenas_user',
 +		value: '',
-+		hidden: me.iscsiprovider !== "freenas",
-+		fieldLabel: gettext('FreeNAS User'),
++		hidden: me.iscsiprovider !== "truenas",
++		fieldLabel: gettext('TrueNAS User'),
 +		allowBlank: true
 +	    },
  	];
@@ -41,20 +41,20 @@
 +		allowBlank: false,
 +		listeners: {
 +			change: function(f, value) {
-+				if (value === "freenas") {
-+					me.down('field[name=freenas_use_ssl]').setHidden(false);
-+					me.down('field[name=freenas_apiv4_host]').setHidden(false);
-+					me.down('field[name=freenas_user]').setHidden(false);
-+					me.down('field[name=freenas_password]').setHidden(false);
++				if (value === "truenas") {
++					me.down('field[name=truenas_use_ssl]').setHidden(false);
++					me.down('field[name=truenas_apiv4_host]').setHidden(false);
++					me.down('field[name=truenas_user]').setHidden(false);
++					me.down('field[name=truenas_password]').setHidden(false);
 +				} else {
-+					me.down('field[name=freenas_use_ssl]').setHidden(true);
-+					me.down('field[name=freenas_use_ssl]').setValue(false);
-+					me.down('field[name=freenas_apiv4_host]').setHidden(true);
-+					me.down('field[name=freenas_apiv4_host]').setValue(false);
-+					me.down('field[name=freenas_user]').setHidden(true);
-+					me.down('field[name=freenas_user]').setValue('');
-+					me.down('field[name=freenas_password]').setHidden(true);
-+					me.down('field[name=freenas_password]').setValue('');
++					me.down('field[name=truenas_use_ssl]').setHidden(true);
++					me.down('field[name=truenas_use_ssl]').setValue(false);
++					me.down('field[name=truenas_apiv4_host]').setHidden(true);
++					me.down('field[name=truenas_apiv4_host]').setValue(false);
++					me.down('field[name=truenas_user]').setHidden(true);
++					me.down('field[name=truenas_user]').setValue('');
++					me.down('field[name=truenas_password]').setHidden(true);
++					me.down('field[name=truenas_password]').setValue('');
 +				}
 +			}
 +		}
@@ -68,18 +68,18 @@
 +	    },
 +	    {
 +		xtype: me.isCreate ? 'textfield' : 'displayfield',
-+		name: 'freenas_apiv4_host',
++		name: 'truenas_apiv4_host',
 +		value: '',
-+		hidden: me.iscsiprovider !== "freenas",
++		hidden: me.iscsiprovider !== "truenas",
 +		fieldLabel: gettext('API IPv4 Host'),
 +		allowBlank: true
 +	    },
 +	    {
 +		xtype: me.isCreate ? 'textfield' : 'displayfield',
-+		name: 'freenas_password',
++		name: 'truenas_password',
 +		value: '',
-+		hidden: me.iscsiprovider !== "freenas",
-+		fieldLabel: gettext('FreeNAS Password'),
++		hidden: me.iscsiprovider !== "truenas",
++		fieldLabel: gettext('TrueNAS Password'),
 +		allowBlank: true
  	    }
  	];

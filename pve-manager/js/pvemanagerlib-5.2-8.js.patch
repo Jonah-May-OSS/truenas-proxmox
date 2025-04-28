@@ -4,7 +4,7 @@
  	data: {
  	    isLIO: false,
  	    isComstar: true,
-+	    isFreeNAS: false,
++	    isTrueNAS: false,
  	    hasWriteCacheOption: true
  	}
      },
@@ -16,14 +16,14 @@
  	    var vm = this.getViewModel();
  	    vm.set('isLIO', newVal === 'LIO');
  	    vm.set('isComstar', newVal === 'comstar');
- 	    vm.set('isFreeNAS', newVal === 'freenas');
+ 	    vm.set('isTrueNAS', newVal === 'truenas');
 -	    vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'istgt');
-+	    vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'freenas' || newVal === 'istgt');
-+	    if (newVal !== 'freenas') {
-+		me.lookupReference('freenas_use_ssl_field').setValue(false);
-+		me.lookupReference('freenas_apiv4_host_field').setValue('');
-+		me.lookupReference('freenas_user_field').setValue('');
-+		me.lookupReference('freenas_password_field').setValue('');
++	    vm.set('hasWriteCacheOption', newVal === 'comstar' || newVal === 'truenas' || newVal === 'istgt');
++	    if (newVal !== 'truenas') {
++		me.lookupReference('truenas_use_ssl_field').setValue(false);
++		me.lookupReference('truenas_apiv4_host_field').setValue('');
++		me.lookupReference('truenas_user_field').setValue('');
++		me.lookupReference('truenas_password_field').setValue('');
 +	    }
  	}
      },
@@ -38,25 +38,25 @@
  	    },
  	    {
 +		xtype: 'proxmoxcheckbox',
-+		name: 'freenas_use_ssl',
-+		reference: 'freenas_use_ssl_field',
-+		inputId: 'freenas_use_ssl_field',
++		name: 'truenas_use_ssl',
++		reference: 'truenas_use_ssl_field',
++		inputId: 'truenas_use_ssl_field',
 +		checked: false,
-+		bind: me.isCreate ? { hidden: '{!isFreeNAS}' } : { hidden: '{!isFreeNAS}' },
++		bind: me.isCreate ? { hidden: '{!isTrueNAS}' } : { hidden: '{!isTrueNAS}' },
 +		uncheckedValue: 0,
 +		fieldLabel: gettext('API use SSL')
 +	    },
 +	    {
  		xtype: me.isCreate ? 'textfield' : 'displayfield',
- 		name: 'freenas_user',
-+		reference: 'freenas_user_field',
-+		inputId: 'freenas_user_field',
+ 		name: 'truenas_user',
++		reference: 'truenas_user_field',
++		inputId: 'truenas_user_field',
  		value: '',
--		fieldLabel: gettext('FreeNAS User'),
+-		fieldLabel: gettext('TrueNAS User'),
 +		fieldLabel: gettext('API Username'),
- 		bind: me.isCreate ? { hidden: '{!isFreeNAS}' } : { hidden: '{!isFreeNAS}' },
+ 		bind: me.isCreate ? { hidden: '{!isTrueNAS}' } : { hidden: '{!isTrueNAS}' },
 -		allowBlank: true
-+		allowBlank: me.isFreeNAS ? false : true
++		allowBlank: me.isTrueNAS ? false : true
  	    }
  	];
  
@@ -82,19 +82,19 @@
 +	    },
 +	    {
 +		xtype: me.isCreate ? 'textfield' : 'displayfield',
-+		name: 'freenas_apiv4_host',
-+		reference: 'freenas_apiv4_host_field',
++		name: 'truenas_apiv4_host',
++		reference: 'truenas_apiv4_host_field',
 +		value: '',
-+		bind: me.isCreate ? { hidden: '{!isFreeNAS}' } : { hidden: '{!isFreeNAS}' },
++		bind: me.isCreate ? { hidden: '{!isTrueNAS}' } : { hidden: '{!isTrueNAS}' },
 +		fieldLabel: gettext('API IPv4 Host'),
 +		allowBlank: true
 +	    },
 +	    {
 +		xtype: me.isCreate ? 'textfield' : 'displayfield',
-+		name: 'freenas_password',
-+		reference: 'freenas_password_field',
++		name: 'truenas_password',
++		reference: 'truenas_password_field',
 +		value: '',
-+		bind: me.isCreate ? { hidden: '{!isFreeNAS}' } : { hidden: '{!isFreeNAS}' },
++		bind: me.isCreate ? { hidden: '{!isTrueNAS}' } : { hidden: '{!isTrueNAS}' },
 +		fieldLabel: gettext('API Password'),
 +		allowBlank: true
  	    }
