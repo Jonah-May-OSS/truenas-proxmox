@@ -1,5 +1,7 @@
---- ZFSPlugin.pm.orig	2023-12-31 09:56:18.895228853 -0500
-+++ ZFSPlugin.pm	2023-12-31 09:57:08.830488875 -0500
+diff --git a/usr/share/pve-manager/ZFSPlugin.pm b/usr/share/pve-manager/ZFSPlugin.pm
+index 96bb7a9..57246c7 100644
+--- a/usr/share/pve-manager/ZFSPlugin.pm
++++ b/usr/share/pve-manager/ZFSPlugin.pm
 @@ -10,6 +10,7 @@
  
  use base qw(PVE::Storage::ZFSPoolPlugin);
@@ -49,14 +51,13 @@
 +# Part of the multipath enhancement
 +sub zfs_get_wwid_number {
 +    my ($class, $scfg, $guid) = @_;
-+
++    
 +    die "could not find lun_number for guid $guid" if !$guid;
-+
++    
 +    return $class->zfs_request($scfg, undef, 'list_extent', $guid);
 +}
 +
  # Configuration
- 
  sub type {
 @@ -184,6 +199,32 @@
  	    description => "iscsi provider",
@@ -154,4 +155,3 @@
 +
      return ($path, $vmid, $vtype);
  }
- 

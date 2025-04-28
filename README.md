@@ -71,7 +71,9 @@ Latest nightly:
 * Fix Max Lun Limit issue.
   * https://github.com/TheGrandWazoo/freenas-proxmox/issues/150
 * Fix automated builds - <i>In Progress</i>.
-  * Production - 'main' repo component.
+  * General Releases
+  * Beta Releases
+  * Alpha/Nightly Releases
 * Autoinstall the SSH keys.
   * Tech spike to see if it is even doable.
 * Hashicorp Vault integration.

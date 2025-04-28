@@ -1,5 +1,7 @@
---- pvemanagerlib.js.orig	2023-12-30 15:36:27.913505863 -0500
-+++ pvemanagerlib.js	2024-01-02 09:30:56.000000000 -0500
+diff --git a/usr/share/pve-manager/js/pvemanagerlib.js b/usr/share/pve-manager/js/pvemanagerlib.js
+index 6a1b8b4..f91d8cf 100644
+--- a/usr/share/pve-manager/js/pvemanagerlib.js
++++ b/usr/share/pve-manager/js/pvemanagerlib.js
 @@ -9228,6 +9228,7 @@
      alias: ['widget.pveiScsiProviderSelector'],
      comboItems: [
@@ -12,25 +14,25 @@
  	me.callParent();
      },
  });
-+
++ 
  Ext.define('PVE.storage.ZFSInputPanel', {
      extend: 'PVE.panel.StorageBase',
  
      viewModel: {
  	parent: null,
  	data: {
-+isComstar: true,
-+	    isTrueNAS: false,
++    isComstar: true,
++    isTrueNAS: false,
  	    isLIO: false,
 -	    isComstar: true,
-+	    isToken: false,
++    isToken: false,
  	    hasWriteCacheOption: true,
  	},
 +formulas: {
-+            hideUsername: function(get) {
-+                return (!get('isTrueNAS') || !(get('isTrueNAS') && !get('isToken')));
-+            },
-+	},
++        hideUsername: function(get) {
++            return (!get('isTrueNAS') || !(get('isTrueNAS') && !get('isToken')));
++        },
++    },
      },
  
      controller: {
@@ -105,7 +107,7 @@
      initComponent: function() {
 -	var me = this;
 +    var me = this;
-+
++ 
 +    var tnsecret = Ext.create('Ext.form.TextField', { 
 +        xtype: 'proxmoxtextfield',
 +        name: 'truenas_secret',
@@ -150,11 +152,10 @@
 +            return true;
 +        },
 +    });
-+
++ 
 +    me.column1 = [
 +        {
 +        xtype: me.isCreate ? 'textfield' : 'displayfield',
-+        name: 'portal',
  		value: '',
  		fieldLabel: gettext('Portal'),
  		allowBlank: false,
@@ -213,77 +214,4 @@
 +			    tnsecret.labelEl.update('API Token');
 +			    tnconfirmsecret.labelEl.update('Confirm API Token');
 +			    me.lookupReference('truenas_user_field').setValue('');
-+			    me.lookupReference('truenas_user_field').allowBlank = true;
-+			} else {
-+			    tnsecret.labelEl.update('API Password');
-+			    tnconfirmsecret.labelEl.update('Confirm API Password');
-+			    me.lookupReference('truenas_user_field').allowBlank = false;
-+			}
-+		    },
-+		},
-+		bind: {
-+		    hidden: '{!isTrueNAS}'
-+		},
-+		uncheckedValue: 0,
-+		fieldLabel: gettext('API Token Auth'),
-+	    },
-+	    {
-+		xtype: 'textfield',
-+		name: 'truenas_user',
-+		reference: 'truenas_user_field',
-+		inputId: 'truenas_user_field',
-+		value: '',
-+		fieldLabel: gettext('API Username'),
-+		bind: {
-+		    hidden: '{hideUsername}'
-+		},
- 	    },
- 	];
- 
-@@ -58131,7 +58270,9 @@
- 		xtype: me.isCreate ? 'textfield' : 'displayfield',
- 		name: 'comstar_hg',
- 		value: '',
--		bind: me.isCreate ? { disabled: '{!isComstar}' } : { hidden: '{!isComstar}' },
-+		bind: {
-+		    hidden: '{!isComstar}'
-+		},
- 		fieldLabel: gettext('Host group'),
- 		allowBlank: true,
- 	    },
-@@ -58139,15 +58280,32 @@
- 		xtype: me.isCreate ? 'textfield' : 'displayfield',
- 		name: 'lio_tpg',
- 		value: '',
--		bind: me.isCreate ? { disabled: '{!isLIO}' } : { hidden: '{!isLIO}' },
--		allowBlank: false,
--		fieldLabel: gettext('Target portal group'),
-+		bind: {
-+		    hidden: '{!isLIO}'
-+		},
-+				fieldLabel: gettext('Target portal group'),
-+	    allowBlank: true
- 	    },
-+	    {
-+		xtype: 'proxmoxtextfield',
-+		name: 'truenas_apiv4_host',
-+		reference: 'truenas_apiv4_host_field',
-+		value: '',
-+		editable: true,
-+		emptyText: Proxmox.Utils.noneText,
-+		bind: {
-+		    hidden: '{!isTrueNAS}'
-+		},
-+		fieldLabel: gettext('API IPv4 Host'),
-+	    },
-+	    tnsecret,
-+	    tnconfirmsecret,
- 	];
- 
- 	me.callParent();
-     },
- });
-+
- Ext.define('PVE.storage.ZFSPoolSelector', {
-     extend: 'PVE.form.ComboBoxSetStoreNode',
-     alias: 'widget.pveZFSPoolSelector',
++			    me.lookupReference('tr
