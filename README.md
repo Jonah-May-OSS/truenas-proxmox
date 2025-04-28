@@ -62,8 +62,6 @@
   * Remove the need for git dependency.
 * Change to LWP::UserAgent
   * Remove dependency of the REST::Client because LWP::UserAgent is already installed and used by Proxmox VE.
-* Change from FreeNAS to TrueNAS - <i>In Progress</i>.
-  * Cleanup the FreeNAS repo and name everything to TrueNAS to be inline with the product.
 * Add API key for direct TrueNAS services - <i>In Progress</i>.
   * Will be a new enable field and API key and will only be used by the plugin.
   * You will still need the SSH keys, username, and password because of Proxmox VE using `iscsiadm` to get the list of disks.
@@ -152,7 +150,7 @@
  Then issue the following to install the package
  ```bash
  apt update
- apt install freenas-proxmox
+ apt install truenas-proxmox
  ```
 
  </details>
@@ -174,7 +172,7 @@
 <details><summary>If you wish not to use the package you may remove it at anytime with the following:</summary>
 
  ```
-  apt [remove|purge] freenas-proxmox
+  apt [remove|purge] truenas-proxmox
  ```
 
  This will place you back to a normal and non-patched Proxmox VE install.
