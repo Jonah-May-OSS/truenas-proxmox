@@ -13,7 +13,7 @@
   
   - Fork repository to begin update work 
   - Remove donation link from readme
-  - TODO: Change FreeNAS references to TrueNAS
+  - TEST: Change FreeNAS references to TrueNAS
   - TODO: Set up Cloudsmith repo
   - TODO: Optimize with ChatGPT/Copilot
   - TODO: Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
