@@ -2,6 +2,9 @@ name: Dispatch build of the truenas-proxmox plugin package
 
 on:
   push:
+    paths-ignore:
+      - 'README.md'
+      - './github/**'
 
 jobs:
   dispatch:
