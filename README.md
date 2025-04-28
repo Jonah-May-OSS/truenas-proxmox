@@ -9,18 +9,22 @@
 
  <blockquote>
   
- <details>
-  <summary>2023-08-18</summary>
+  <details><summary>2025-04-28</summary>
+  
+  - Fork repository to begin update work 
+  - Remove donation link from readme
+  - TODO: Change FreeNAS references to TrueNAS
+  - TODO: Set up Cloudsmith repo
+  - TODO: Optimize with ChatGPT/Copilot
+  - TODO: Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
+  - TODO: Update REST API for TrueNAS due to deprecation https://github.com/TheGrandWazoo/freenas-proxmox/issues/205
 
-  - Update and cleanup the README.md
-
+  
   </details>
 
-  <details><summary>2023-08-16</summary>
-   
-  - Fixed repos. https://github.com/TheGrandWazoo/freenas-proxmox/issues/151, https://github.com/TheGrandWazoo/freenas-proxmox/issues/152, https://github.com/TheGrandWazoo/freenas-proxmox/issues/153 See [New Installs](#new-installs).
-  - Fixed PayPal issues. https://github.com/TheGrandWazoo/freenas-proxmox/issues/154
-  - Updated README.md
+  <details><summary>2023-08-18</summary>
+
+  - Update and cleanup the README.md
 
   </details>
 
@@ -38,41 +42,6 @@
 
   </blockquote>
 </details>
-
-## Donations [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TCLNEMBUYQUXN&source=url)
-
-<details>Donators<summary>Thank you for all that have donated to the project - Updated 2023-08-18</summary>
- 
-    Alexander Finkhäuser - Recurring
-    Bjarte Kvamme - Recurring
-    Jonathan Schober - Recurring
-    Carlos Galvez from Security Camera
-    Sebastian Fischer
-    Eugene van der Merwe
-    Martin Gonzalez
-    
-    Jakub Jochec
-    Frederic Silvi
-    Vincent Cui
-    Mark Komarinski
-    Jesse Bryan
-    Maksym Vasylenko
-    Daniel Most
-    Velocity Host
-    Robert Hancock
-    Clevvi Technology
-    Mark Elkins
-    Marc Hodler
-    Martin Gonzalez
-
-</details>
-
-Their donations have allowed for:
-- A 4 Node Proxmox VE Cluster for testing and development.
-  - Spin up old and new revisions of FreeNAS and TrueNAS.
-- 10Gb Ethernet Testing.
-- Multihomed configuration testing.
-  - In progress and as best I can in a flat network.
 
 ## Roadmap
 <details><summary>Roadmap details</summary>
