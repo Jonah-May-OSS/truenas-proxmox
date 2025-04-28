@@ -1,6 +1,6 @@
 # TrueNAS ZFS over iSCSI Plugin for Proxmox VE
 
-## 📢: ATTENTION 2025-04-28 📢: New repos are now online at [Cloudsmith](#new-installs).
+## 📢: ATTENTION 2023-08-16 📢: New repos are now online at [Cloudsmith](#new-installs).
 
 ## Activity
 
@@ -13,6 +13,7 @@
   
   - Fork repository to begin update work 
   - Remove donation link from readme
+  - Create new Cloudsmith repos to point new code to
   
   </details>
 
@@ -43,7 +44,7 @@
 * Change FreeNAS references to TrueNAS - <i> Implemented, Pending Testing</i>.
 * Fork freenas-proxmox-packer and set up - <i> Completed, Pending Testing</i>.
 * Port wiki to new fork
-* Set up new Cloudsmith repo for new fork
+* Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
 * Optimize code with ChatGPT/Copilot
 * Fix iSCSI errors
   * Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
@@ -78,31 +79,31 @@
 
 <details><summary>Step 1.0: For stable releases. <b>Enabled</b> by default.</summary>
 
- ### truenas-proxmox repo - Currently follows the 2.0 branch.
+ ### truenas-proxmox repo - Currently follows the 3.0 branch.
 
  Select one of the following GPG Key locations based on your preference.
 
  ```bash
  # Preferred - based on documentation. Copy and paste to bash command line:
- keyring_location=/usr/share/keyrings/ksatechnologies-truenas-proxmox-keyring.gpg
+ keyring_location=/usr/share/keyrings/jonah-may-oss-truenas-proxmox-keyring.gpg
  ```
 
  ```bash
  # Alternative - If you wish to continue with the old ways.  Copy and paste to bash command line:
- keyring_location=/etc/apt/trusted.gpg.d/ksatechnologies-truenas-proxmox.gpg
+ keyring_location=/etc/apt/trusted.gpg.d/jonah-may-oss-truenas-proxmox.gpg
  ```
 
  Copy and paste to bash command line to load the GPG key to the location selected above:
  ```bash
- curl -1sLf 'https://dl.cloudsmith.io/public/ksatechnologies/truenas-proxmox/gpg.284C106104A8CE6D.key' |  gpg --dearmor >> ${keyring_location}
+ curl -1sLf 'https://dl.cloudsmith.io/public/jonah-may-oss/truenas-proxmox/gpg.7E6C3EBFF19F8651.key' |  gpg --dearmor >> ${keyring_location}
  ```
 
- Copy and paste the following code to bash command line to create '/etc/apt/sources.list.d/ksatechnologies-repo.list'
+ Copy and paste the following code to bash command line to create '/etc/apt/sources.list.d/jonah-may-oss-repo.list'
  ```bash
- cat << EOF > /etc/apt/sources.list.d/ksatechnologies-repo.list
- # Source: KSATechnologies
+ cat << EOF > /etc/apt/sources.list.d/jonah-may-oss-repo.list
+ # Source: Jonah May OSS
  # Site: https://cloudsmith.io
- # Repository: KSATechnologies / truenas-proxmox
+ # Repository: Jonah May OSS / truenas-proxmox
  # Description: TrueNAS plugin for Proxmox VE - Production
  deb [signed-by=${keyring_location}] https://dl.cloudsmith.io/public/ksatechnologies/truenas-proxmox/deb/debian any-version main
 
@@ -111,7 +112,7 @@
 
 </details>
 
-<details><summary>Step 1.1: For development releases. <i>Disabled</i> by default.</summary>
+<details><summary>Step 1.1: For beta releases. <i>Disabled</i> by default.</summary>
 
  ### truenas-proxmox-testing repo - Follows the master branch and you wish to test before a stable release (beta).
  
@@ -119,25 +120,25 @@
 
  ```bash
  # Preferred - based on documentation. Copy and paste to bash command line:
- keyring_location=/usr/share/keyrings/ksatechnologies-truenas-proxmox-testing-keyring.gpg
+ keyring_location=/usr/share/keyrings/jonah-may-oss-truenas-proxmox-testing-keyring.gpg
  ```
 
  ```bash
  # Alternative - If you wish to continue with the old ways.  Copy and paste to bash command line:
- keyring_location=/etc/apt/trusted.gpg.d/ksatechnologies-truenas-proxmox-testing.gpg
+ keyring_location=/etc/apt/trusted.gpg.d/jonah-may-oss-truenas-proxmox-testing.gpg
  ```
 
  Copy and paste to bash command line to load the GPG key to the location selected above:
  ```bash
- curl -1sLf 'https://dl.cloudsmith.io/public/ksatechnologies/truenas-proxmox-testing/gpg.CACC9EE03F2DFFCC.key' |  gpg --dearmor >> ${keyring_location}
+ curl -1sLf 'https://dl.cloudsmith.io/public/jonah-may-oss/truenas-proxmox-testing/gpg.02DA93FB91DEBFD9.key' |  gpg --dearmor >> ${keyring_location}
  ```
 
- Copy and paste the following code to bash command line to create '/etc/apt/sources.list.d/ksatechnologies-testing-repo.list'
+ Copy and paste the following code to bash command line to create '/etc/apt/sources.list.d/jonah-may-oss-repo.list'
  ```bash
- cat << EOF > /etc/apt/sources.list.d/ksatechnologies-testing-repo.list
- # Source: KSATechnologies
+ cat << EOF > /etc/apt/sources.list.d/jonah-may-oss-repo.list
+ # Source: Jonah May OSS
  # Site: https://cloudsmith.io
- # Repository: KSATechnologies / truenas-proxmox-testing
+ # Repository: Jonah May OSS / truenas-proxmox-testing
  # Description: TrueNAS plugin for Proxmox VE - Testing
  deb [signed-by=${keyring_location}] https://dl.cloudsmith.io/public/ksatechnologies/truenas-proxmox-testing/deb/debian any-version main
 
