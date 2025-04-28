@@ -1,10 +1,19 @@
 # TrueNAS ZFS over iSCSI Plugin for Proxmox VE
 
-Latest release: [![Latest version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
+Latest release:
 
-Latest beta: [![Latest beta version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-testing/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-testing/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
+[![Latest version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
 
-Latest nightly: [![Latest nightly version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-snapshots/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-snapshots/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
+
+Latest beta:
+
+[![Latest beta version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-testing/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-testing/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
+
+
+Latest nightly:
+
+[![Latest nightly version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-snapshots/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-snapshots/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
+
 
 ## Activity
 
