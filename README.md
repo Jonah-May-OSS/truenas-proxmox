@@ -13,14 +13,6 @@
   
   - Fork repository to begin update work 
   - Remove donation link from readme
-  - TEST: Change FreeNAS references to TrueNAS
-  - TEST: Integration with truenas-proxmox-packer fork
-  - TODO: Port wiki
-  - TODO: Set up Cloudsmith repo
-  - TODO: Optimize with ChatGPT/Copilot
-  - TODO: Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
-  - TODO: Update REST API for TrueNAS due to deprecation https://github.com/TheGrandWazoo/freenas-proxmox/issues/205
-
   
   </details>
 
@@ -47,7 +39,15 @@
 
 ## Roadmap
 <details><summary>Roadmap details</summary>
-
+* Change FreeNAS references to TrueNAS - <i> Implemented, Pending Testing</i>.
+* Fork freenas-proxmox-packer and set up - <i> Completed, Pending Testing</i>.
+* Port wiki to new fork
+* Set up new Cloudsmith repo for new fork
+* Optimize code with ChatGPT/Copilot
+* Fix iSCSI errors
+  * Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
+* Update REST API to fix deprecations
+  * https://github.com/TheGrandWazoo/freenas-proxmox/issues/205
 * Update the documentation - <i>In Progress</i>.
   * Restructure the main README.md for better readability. 
   * Add some screenshots.
