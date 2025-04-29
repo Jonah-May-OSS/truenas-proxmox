@@ -1,179 +1,155 @@
+=pod
+=head1 NAME
+PVE::Storage::LunCmd::TrueNAS - iSCSI LUN management via TrueNAS REST API
+
+=head1 SYNOPSIS
+    PVE::Storage::LunCmd::TrueNAS::run_lun_command(
+        $scfg, $timeout, $method, @params
+    );
+
+=head1 DESCRIPTION
+Implements iSCSI LUN operations (create/delete/list/modify) against
+TrueNAS CORE / SCALE using the v1.0 or v2.0 REST API.
+
+=cut
+
 package PVE::Storage::LunCmd::TrueNAS;
 
 use strict;
 use warnings;
-use Data::Dumper;
-use PVE::SafeSyslog;
+use Carp qw(croak);
 use IO::Socket::SSL;
-
-use LWP::UserAgent;
-use HTTP::Request;
 use REST::Client;
-use MIME::Base64;
-use JSON;
+use MIME::Base64 qw(encode_base64);
+use JSON::MaybeXS qw(encode_json decode_json);
+use PVE::SafeSyslog qw(syslog);
 
 # Global variable definitions
-my $MAX_LUNS = 255;                        # Max LUNS per target on the iSCSI server
 my $truenas_server_list = undef;           # API connection HashRef using the IP address of the server
 my $truenas_rest_connection = undef;       # Pointer to entry in $truenas_server_list
 my $truenas_global_config_list = undef;    # IQN HashRef using the IP address of the server
 my $truenas_global_config = undef;         # Pointer to entry in $truenas_global_config_list
-my $dev_prefix = "";
-my $product_name = undef;
-my $apiping = '/api/v1.0/system/version/'; # Initial API method for setup
-my $runawayprevent = 0;                    # Recursion prevention variable
 
-# TrueNAS API definitions
-my $truenas_api_version = "v1.0";          # Default to v1.0 of the API's
-my $truenas_api_methods = undef;           # API Methods Nested HASH Ref
-my $truenas_api_variables = undef;         # API Variable Nested HASH Ref
-my $truenas_version = undef;
-my $truenas_release_type = "Production";
+# constants & globals
+use constant MAX_LUNS => 255;                       # Max LUNS per target on the iSCSI server
+our %SERVER_LIST;
+our %GLOBAL_CONFIG_LIST;
+our $API_VERSION    = 'v1.0';
+our $TRUENAS_VERSION;
+our $PRODUCT_NAME;
+our $RELEASE_TYPE   = 'Production';
 
-# TrueNAS/TrueNAS (CORE) API Versioning HashRef Matrix
-my $truenas_api_version_matrix = {
-    "v1.0" => {
-        "methods" => {
-            "config"       => {
-                "resource" => "/api/v1.0/services/iscsi/globalconfiguration/",
-            },
-            "target"       => {
-                "resource" => "/api/v1.0/services/iscsi/target/",
-            },
-            "extent"       => {
-                "resource"  => "/api/v1.0/services/iscsi/extent/",
-                "post_body" => {
-                    "iscsi_target_extent_type" => "Disk",
-                    "iscsi_target_extent_name" => "\$name",
-                    "iscsi_target_extent_disk" => "\$device",
+my $DEV_PREFIX      = '';
+my $API_PATH        = '/api/v1.0/system/version/';  # Initial API method for setup
+my $RUNAWAY_PREVENT = 0;                            # Recursion prevention variable
+
+# API version matrix
+my $API_VERSION_MATRIX = {
+    'v1.0' => {
+        methods => {
+            config => { resource => '/api/v1.0/services/iscsi/globalconfiguration/' },
+            target => { resource => '/api/v1.0/services/iscsi/target/' },
+            extent => {
+                resource => '/api/v1.0/services/iscsi/extent/',
+                post_body => {
+                    iscsi_target_extent_type => 'Disk',
+                    iscsi_target_extent_name => '$name',
+                    iscsi_target_extent_disk => '$device',
                 },
             },
-            "targetextent" => {
-                "resource"  => "/api/v1.0/services/iscsi/targettoextent/",
-                "post_body" => {
-                    "iscsi_target" => "\$target_id",
-                    "iscsi_extent" => "\$extent_id",
-                    "iscsi_lunid" => "\$lun_id",
+            targetextent => {
+                resource => '/api/v1.0/services/iscsi/targettoextent/',
+                post_body => {
+                    iscsi_target => '$target_id',
+                    iscsi_extent => '$extent_id',
+                    iscsi_lunid => '$lun_id',
                 },
             },
         },
-        "variables" => {
-            "basename"     => "iscsi_basename",
-            "lunid"        => "iscsi_lunid",
-            "extentid"     => "iscsi_extent",
-            "targetid"     => "iscsi_target",
-            "extentpath"   => "iscsi_target_extent_path",
-            "extentnaa"    => "iscsi_target_extent_naa",
-            "targetname"   => "iscsi_target_name",
-        }
+        variables => {
+            basename   => 'iscsi_basename',
+            lunid      => 'iscsi_lunid',
+            extentid   => 'iscsi_extent',
+            targetid   => 'iscsi_target',
+            extentpath => 'iscsi_target_extent_path',
+            extentnaa  => 'iscsi_target_extent_naa',
+            targetname => 'iscsi_target_name',
+        },
     },
-    "v2.0" => {
-        "methods" => {
-            "config"       => {
-                "resource" => "/api/v2.0/iscsi/global",
-            },
-            "target"       => {
-                "resource" => "/api/v2.0/iscsi/target/",
-            },
-            "extent"       => {
-                "resource"    => "/api/v2.0/iscsi/extent/",
-                "delete_body" => {
-                    "remove" => \1,
-                    "force"  => \1,
-                },
-                "post_body"   => {
-                    "type"   => "DISK",
-                    "name"   => "\$name",
-                    "disk"   => "\$device",
+    'v2.0' => {
+        methods => {
+            config => { resource => '/api/v2.0/iscsi/global' },
+            target => { resource => '/api/v2.0/iscsi/target/' },
+            extent => {
+                resource => '/api/v2.0/iscsi/extent/',
+                delete_body => { remove => \1, force => \1 },
+                post_body => {
+                    type => 'DISK',
+                    name => '$name',
+                    disk => '$device',
                 },
             },
-            "targetextent" => {
-                "resource"    => "/api/v2.0/iscsi/targetextent/",
-                "delete_body" => {
-                    "force"  => \1,
-                },
-                "post_body"   => {
-                    "target"  => "\$target_id",
-                    "extent"  => "\$extent_id",
-                    "lunid"   => "\$lun_id",
+            targetextent => {
+                resource => '/api/v2.0/iscsi/targetextent/',
+                delete_body => { force => \1 },
+                post_body => {
+                    target => '$target_id',
+                    extent => '$extent_id',
+                    lunid => '$lun_id',
                 },
             },
         },
-        "variables" => {
-            "basename"     => "basename",
-            "lunid"        => "lunid",
-            "extentid"     => "extent",
-            "targetid"     => "target",
-            "extentpath"   => "path",
-            "extentnaa"    => "naa",
-            "targetname"   => "name",
+        variables => {
+            basename   => 'basename',
+            lunid      => 'lunid',
+            extentid   => 'extent',
+            targetid   => 'target',
+            extentpath => 'path',
+            extentnaa  => 'naa',
+            targetname => 'name',
         },
     },
 };
 
+# dispatch for run_lun_command
+my %COMMAND_DISPATCH = (
+    create_lu   => \&run_create_lu,
+    delete_lu   => \&run_delete_lu,
+    import_lu   => \&run_create_lu,
+    modify_lu   => \&run_modify_lu,
+    add_view    => \&run_add_view,
+    list_view   => \&run_list_view,
+    list_extent => \&run_list_extent,
+    list_lu     => sub { my ($s,$t,$m,@p)=@_; run_list_lu($s,$t,$m,'name',@p) },
+);
 
-#
-#
-#
-sub get_base {
-    return '/dev/zvol';
-}
+# return the base path for zvols
+sub get_base { '/dev/zvol' }
 
-
-#
-# Subroutine called from ZFSPlugin.pm
-#
+# main entry point
 sub run_lun_command {
     my ($scfg, $timeout, $method, @params) = @_;
+    syslog('info', "run_lun_command: $method(@params)");
 
-    syslog("info",(caller(0))[3] . " : $method(@params)");
-
-    if (defined($scfg->{'truenas_token_auth'}) && $scfg->{'truenas_token_auth'}) {
-        if (!defined($scfg->{'truenas_secret'})) {
-            die "Undefined `truenas_secret` variable.";
-        }
-    } elsif (!defined($scfg->{'truenas_user'}) || !defined($scfg->{'truenas_password'})) {
-        die "Undefined `truenas_user` and/or `truenas_password` variables.";
-    }
-    if (!defined $truenas_server_list->{defined($scfg->{truenas_apiv4_host}) ? $scfg->{truenas_apiv4_host} : $scfg->{portal}}) {
-        truenas_api_check($scfg);
+    # auth checks
+    if ($scfg->{truenas_token_auth}) {
+        croak 'Missing truenas_secret' unless defined $scfg->{truenas_secret};
+    } else {
+        croak 'Missing truenas_user/password'
+            unless defined $scfg->{truenas_user} && defined $scfg->{truenas_password};
     }
 
-    if($method eq "create_lu") {
-        return run_create_lu($scfg, $timeout, $method, @params);
-    }
-    if($method eq "delete_lu") {
-        return run_delete_lu($scfg, $timeout, $method, @params);
-    }
-    if($method eq "import_lu") {
-        return run_create_lu($scfg, $timeout, $method, @params);
-    }
-    if($method eq "modify_lu") {
-        return run_modify_lu($scfg, $timeout, $method, @params);
-    }
-    if($method eq "add_view") {
-        return run_add_view($scfg, $timeout, $method, @params);
-    }
-    if($method eq "list_view") {
-        return run_list_view($scfg, $timeout, $method, @params);
-    }
-    if($method eq "list_extent") {
-        return run_list_extent($scfg, $timeout, $method, @params);
-    }
-    if($method eq "list_lu") {
-        return run_list_lu($scfg, $timeout, $method, "name", @params);
+    my $host = $scfg->{truenas_apiv4_host} // $scfg->{portal};
+    truenas_api_check($scfg) if !exists $SERVER_LIST{$host};
+
+    if (my $cb = $COMMAND_DISPATCH{$method}) {
+        return $cb->($scfg, $timeout, $method, @params);
     }
 
-    syslog("error",(caller(0))[3] . " : unknown method $method");
-    return undef;
+    croak "Unknown LUN method '$method'";
 }
 
-#
-#
-#
-sub run_add_view {
-    return '';
-}
+sub run_add_view { '' }
 
 #
 # a modify_lu occur by example on a zvol resize. we just need to destroy and recreate the lun with the same zvol.
@@ -181,310 +157,155 @@ sub run_add_view {
 #
 sub run_modify_lu {
     my ($scfg, $timeout, $method, @params) = @_;
-
-    syslog("info", (caller(0))[3] . " : called");
-
-    shift(@params);
+    syslog('info','run_modify_lu');
+    shift @params;
     run_delete_lu($scfg, $timeout, $method, @params);
-    return run_create_lu($scfg, $timeout, $method, @params);
+    run_create_lu($scfg, $timeout, $method, @params);
 }
 
-#
-# 
-#
 sub run_list_view {
     my ($scfg, $timeout, $method, @params) = @_;
-
-    syslog("info", (caller(0))[3] . " : called");
-
-    return run_list_lu($scfg, $timeout, $method, "lun-id", @params);
+    syslog('info','run_list_view');
+    run_list_lu($scfg, $timeout, $method, 'lun-id', @params);
 }
 
-#
-#
-# Optimized
-sub run_list_lu {
-    my ($scfg, $timeout, $method, $result_value_type, @params) = @_;
-    my $object = $params[0];
-    my $result = undef;
-    my $luns = truenas_list_lu($scfg);
-    syslog("info", (caller(0))[3] . " : called with (method: '$method'; result_value_type: '$result_value_type'; param[0]: '$object')");
-
-    $object =~ s/^\Q$dev_prefix//;
-    syslog("info", (caller(0))[3] . " : TrueNAS object to find: '$object'");
-    if (defined($luns->{$object})) {
-        my $lu_object = $luns->{$object};
-        $result = $result_value_type eq "lun-id" ? $lu_object->{$truenas_api_variables->{'lunid'}} : $dev_prefix . $lu_object->{$truenas_api_variables->{'extentpath'}};
-        syslog("info",(caller(0))[3] . " '$object' with key '$result_value_type' found with value: '$result'");
-    } else {
-        syslog("info", (caller(0))[3] . " '$object' with key '$result_value_type' was not found");
-    }
-    return $result;
-}
-
-#
-#
-# Optimzed
 sub run_list_extent {
     my ($scfg, $timeout, $method, @params) = @_;
-    my $object = $params[0];
-    syslog("info", (caller(0))[3] . " : called with (method: '$method'; params[0]: '$object')");
-    my $result = undef;
+    syslog('info','run_list_extent');
+    (my $obj = $params[0]) =~ s/^\Q$DEV_PREFIX//;
     my $luns = truenas_list_lu($scfg);
-
-    $object =~ s/^\Q$dev_prefix//;
-    syslog("info", (caller(0))[3] . " TrueNAS object to find: '$object'");
-    if (defined($luns->{$object})) {
-        my $lu_object = $luns->{$object};
-        $result = $lu_object->{$truenas_api_variables->{'extentnaa'}};
-        syslog("info",(caller(0))[3] . " '$object' wtih key '$truenas_api_variables->{'extentnaa'}' found with value: '$result'");
-    } else {
-        syslog("info",(caller(0))[3] . " '$object' with key '$truenas_api_variables->{'extentnaa'}' was not found");
-    }
-    return $result;
+    return $luns->{$obj}{ $API_VERSION_MATRIX->{$API_VERSION}{variables}{extentnaa} }
+        if exists $luns->{$obj};
+    return;
 }
 
-#
-#
-#
+sub run_list_lu {
+    my ($scfg, $timeout, $method, $val_type, $obj) = @_;
+    syslog('info',"run_list_lu($val_type)");
+    $obj =~ s/^\Q$DEV_PREFIX//;
+    my $luns = truenas_list_lu($scfg);
+    return unless exists $luns->{$obj};
+    my $e = $luns->{$obj};
+    if ($val_type eq 'lun-id') {
+        return $e->{ $API_VERSION_MATRIX->{$API_VERSION}{variables}{lunid} };
+    }
+    return $DEV_PREFIX . $e->{ $API_VERSION_MATRIX->{$API_VERSION}{variables}{extentpath} };
+}
+
 sub run_create_lu {
-    my ($scfg, $timeout, $method, @params) = @_;
-    my $lun_path  = $params[0];
-
-    syslog("info", (caller(0))[3] . " : called with (method=$method; param[0]=$lun_path)");
-
-    my $lun_id    = truenas_get_first_available_lunid($scfg);
-
-    die "Maximum number of LUNs per target is $MAX_LUNS" if scalar $lun_id >= $MAX_LUNS;
-    die "$params[0]: LUN $lun_path exists" if defined(run_list_lu($scfg, $timeout, $method, "name", @params));
+    my ($scfg, $timeout, $method, $lun_path) = @_;
+    syslog('info',"run_create_lu($lun_path)");
+    my $lun_id = truenas_get_first_available_lunid($scfg);
+    croak "Max LUNs (".MAX_LUNS.") exceeded" if $lun_id >= MAX_LUNS;
+    croak "LUN '$lun_path' exists"
+        if run_list_lu($scfg, $timeout, $method, 'name', $lun_path);
 
     my $target_id = truenas_get_targetid($scfg);
-    die "Unable to find the target id for $scfg->{target}" if !defined($target_id);
+    croak "Unable to find target id" unless defined $target_id;
 
-    # Create the extent
-    my $extent = truenas_iscsi_create_extent($scfg, $lun_path);
-
-    # Associate the new extent to the target
-    my $link = truenas_iscsi_create_target_to_extent($scfg, $target_id, $extent->{'id'}, $lun_id);
-
-    if (defined($link)) {
-       syslog("info","TrueNAS::create_lu(lun_path=$lun_path, lun_id=$lun_id) : successful");
-    } else {
-       die "Unable to create lun $lun_path";
-    }
-
-    return "";
+    my $extent = truenas_iscsi_create_extent($scfg, $lun_path)
+        or croak "create_extent failed";
+    truenas_iscsi_create_target_to_extent($scfg, $target_id, $extent->{id}, $lun_id)
+        or croak "link creation failed";
+    '';
 }
 
-#
-#
-# Optimzied
 sub run_delete_lu {
-    my ($scfg, $timeout, $method, @params) = @_;
-    my $lun_path  = $params[0];
-
-    syslog("info", (caller(0))[3] . " : called with (method: '$method'; param[0]: '$lun_path')");
-
-    my $luns      = truenas_list_lu($scfg);
-    my $lun       = undef;
-    my $link      = undef;
-    $lun_path =~ s/^\Q$dev_prefix//;
-
-    if (defined($luns->{$lun_path})) {
-        $lun = $luns->{$lun_path};
-        syslog("info",(caller(0))[3] . " lun: '$lun_path' found");
-    } else {
-        die "Unable to find the lun $lun_path for $scfg->{target}";
-    }
+    my ($scfg, $timeout, $method, $lun_path) = @_;
+    syslog('info',"run_delete_lu($lun_path)");
+    $lun_path =~ s/^\Q$DEV_PREFIX//;
+    my $luns = truenas_list_lu($scfg);
+    croak "LUN '$lun_path' not found" unless exists $luns->{$lun_path};
+    my $lun = $luns->{$lun_path};
 
     my $target_id = truenas_get_targetid($scfg);
-    die "Unable to find the target id for $scfg->{target}" if !defined($target_id);
+    croak "Unable to find target id" unless defined $target_id;
 
-    # find the target to extent
-    my $target2extents = truenas_iscsi_get_target_to_extent($scfg);
+    my $t2e = truenas_iscsi_get_target_to_extent($scfg);
+    my ($link) = grep {
+        $_->{ $API_VERSION_MATRIX->{$API_VERSION}{variables}{targetid} } == $target_id
+        && $_->{ $API_VERSION_MATRIX->{$API_VERSION}{variables}{lunid}   } == $lun->{ $API_VERSION_MATRIX->{$API_VERSION}{variables}{lunid} }
+        && $_->{ $API_VERSION_MATRIX->{$API_VERSION}{variables}{extentid} } == $lun->{id}
+    } @$t2e;
+    croak "Link for LUN '$lun_path' not found" unless $link;
 
-    syslog("info", (caller(0))[3] . " : searching for 'targetextent' with (target_id=$target_id; lun_id=$lun->{$truenas_api_variables->{'lunid'}}; extent_id=$lun->{id})");
-    foreach my $item (@$target2extents) {
-        if($item->{$truenas_api_variables->{'targetid'}} == $target_id &&
-           $item->{$truenas_api_variables->{'lunid'}} == $lun->{$truenas_api_variables->{'lunid'}} &&
-           $item->{$truenas_api_variables->{'extentid'}} == $lun->{'id'}) {
-            $link = $item;
-            syslog("info", (caller(0))[3] . " : found 'targetextent'(target_id=$item->{$truenas_api_variables->{'targetid'}}; lun_id=$item->{$truenas_api_variables->{'lunid'}}; extent_id=$item->{$truenas_api_variables->{'extentid'}})");
-            last;
-        }
-    }
-    die "Unable to find the link for the lun $lun_path for $scfg->{target}" if !defined($link);
-
-    # Remove the extent
-    my $remove_extent = truenas_iscsi_remove_extent($scfg, $lun->{'id'});
-
-    # Remove the link
-    my $remove_link = truenas_iscsi_remove_target_to_extent($scfg, $link->{'id'});
-
-    if($remove_link == 1 && $remove_extent == 1) {
-        syslog("info", (caller(0))[3] . "(lun_path=$lun_path) : successful");
-    } else {
-        die "Unable to delete lun $lun_path";
-    }
-
-    return "";
+    truenas_iscsi_remove_target_to_extent($scfg, $link->{id})
+        or croak "remove link failed";
+    truenas_iscsi_remove_extent($scfg, $lun->{id})
+        or croak "remove extent failed";
+    '';
 }
 
-
+# API connection & versioning
 sub truenas_api_connect {
     my ($scfg) = @_;
-
-    syslog("info", (caller(0))[3] . " : called");
-
-    my $scheme = $scfg->{truenas_use_ssl} ? "https" : "http";
-    my $apihost = defined($scfg->{truenas_apiv4_host}) ? $scfg->{truenas_apiv4_host} : $scfg->{portal};
-
-    if (! defined $truenas_server_list->{$apihost}) {
-        $truenas_server_list->{$apihost} = REST::Client->new();
-    }
-    $truenas_server_list->{$apihost}->setHost($scheme . '://' . $apihost);
-    $truenas_server_list->{$apihost}->addHeader('Content-Type', 'application/json');
-    if (defined($scfg->{'truenas_token_auth'})) {
-        syslog("info", (caller(0))[3] . " : Authentication using Bearer Token Auth");
-        $truenas_server_list->{$apihost}->addHeader('Authorization', 'Bearer ' . $scfg->{truenas_secret});
+    syslog('info','truenas_api_connect');
+    my $scheme = $scfg->{truenas_use_ssl} ? 'https' : 'http';
+    my $host   = $scfg->{truenas_apiv4_host}//$scfg->{portal};
+    $SERVER_LIST{$host} //= REST::Client->new();
+    my $c = $SERVER_LIST{$host};
+    $c->setHost("$scheme://$host");
+    $c->addHeader('Content-Type','application/json');
+    if ($scfg->{truenas_token_auth}) {
+        syslog('info','Bearer auth');
+        $c->addHeader('Authorization','Bearer '.$scfg->{truenas_secret});
     } else {
-        syslog("info", (caller(0))[3] . " : Authentication using Basic Auth");
-        $truenas_server_list->{$apihost}->addHeader('Authorization', 'Basic ' . encode_base64($scfg->{truenas_user} . ':' . $scfg->{truenas_password}));
+        syslog('info','Basic auth');
+        $c->addHeader('Authorization','Basic '.encode_base64("$scfg->{truenas_user}:$scfg->{truenas_password}", ''));
     }
-    # If using SSL, don't verify SSL certs
     if ($scfg->{truenas_use_ssl}) {
-        $truenas_server_list->{$apihost}->getUseragent()->ssl_opts(verify_hostname => 0);
-        $truenas_server_list->{$apihost}->getUseragent()->ssl_opts(SSL_verify_mode => SSL_VERIFY_NONE);
+        $c->getUseragent->ssl_opts(verify_hostname=>0, SSL_verify_mode=>IO::Socket::SSL::SSL_VERIFY_NONE);
     }
-    # Check if the APIs are accessable via the selected host and scheme
-    my $api_response = $truenas_server_list->{$apihost}->request('GET', $apiping);
-    my $code = $api_response->responseCode();
-    my $type = $api_response->responseHeader('Content-Type');
-    syslog("info", (caller(0))[3] . " : REST connection header Content-Type:'" . $type . "'");
+    my $res = $c->GET($API_PATH);
+    my $code = $res->responseCode;
+    my $ct   = $res->responseHeader('Content-Type');
 
-    # Make sure we are not recursion calling.
-    if ($runawayprevent > 2) {
-        truenas_api_log_error($truenas_server_list->{$apihost});
-        die "Loop recursion prevention";
-    # Successful connection
-    } elsif ($code == 200 && ($type =~ /^text\/plain/ || $type =~ /^application\/json/)) {
-        syslog("info", (caller(0))[3] . " : REST connection successful to '" . $apihost . "' using the '" . $scheme . "' protocol");
-        $runawayprevent = 0;
-    # A 302 or 200 (We already check for the correct 'type' above with a 200 so why add additional conditionals).
-    # So change to v2.0 APIs.
-    } elsif ($code == 302 || $code == 200) {
-        syslog("info", (caller(0))[3] . " : Changing to v2.0 API's");
-        $runawayprevent++;
-        $apiping =~ s/v1\.0/v2\.0/;
-        truenas_api_connect($scfg);
-    # A 307 from TrueNAS means rediect http to https.
-    } elsif ($code == 307) {
-        syslog("info", (caller(0))[3] . " : Redirecting to HTTPS protocol");
-        $runawayprevent++;
-        $scfg->{truenas_use_ssl} = 1;
-        truenas_api_connect($scfg);
-    # For now, any other code we fail.
+    if ($RUNAWAY_PREVENT>2) {
+        truenas_api_log_error($c);
+        croak 'recursion limit';
+    } elsif ($code==200 && $ct=~m{^(?:text/plain|application/json)}) {
+        $RUNAWAY_PREVENT=0;
+    } elsif ($code==302) {
+        $RUNAWAY_PREVENT++;
+        $API_PATH=~s/v1\.0/v2\.0/;
+        $API_VERSION='v2.0';
+        return truenas_api_connect($scfg);
+    } elsif ($code==307) {
+        $RUNAWAY_PREVENT++;
+        $scfg->{truenas_use_ssl}=1;
+        return truenas_api_connect($scfg);
     } else {
-        truenas_api_log_error($truenas_server_list->{$apihost});
-        die "Unable to connect to the TrueNAS API service at '" . $apihost . "' using the '" . $scheme . "' protocol";
+        truenas_api_log_error($c);
+        croak "connect failed $host";
     }
-    $truenas_rest_connection = $truenas_server_list->{$apihost};
-    return;
+    $GLOBAL_CONFIG_LIST{$host} //= truenas_iscsi_get_globalconfiguration($scfg);
 }
 
-#
-# Check to see what TrueNAS version we are running and set
-# the TrueNAS.pm to use the correct API version of TrueNAS
-#
 sub truenas_api_check {
-    my ($scfg, $timeout) = @_;
-    my $result = {};
-    my $apihost = defined($scfg->{truenas_apiv4_host}) ? $scfg->{truenas_apiv4_host} : $scfg->{portal};
-
-    syslog("info", (caller(0))[3] . " : called");
-
-    if (! defined $truenas_rest_connection->{$apihost}) {
-        truenas_api_connect($scfg);
-        eval {
-            $result = decode_json($truenas_rest_connection->responseContent());
-        };
-        if ($@) {
-            $result = $truenas_rest_connection->responseContent();
-        } else {
-            $result = $truenas_rest_connection->responseContent();
-        }
-        $result =~ s/"//g;
-        syslog("info", (caller(0))[3] . " : successful : Server version: " . $result);
-        if ($result =~ /^(TrueNAS|TrueNAS)-(\d+)\.(\d+)\-U(\d+)(?(?=\.)\.(\d+))$/) {
-            $product_name = $1;
-            $truenas_version = sprintf("%02d%02d%02d%02d", $2, $3 || 0, $4 || 0, $5 || 0);
-        } elsif ($result =~ /^(TrueNAS)-(\d+)\.(\d+)(?(?=\-U\d+)-U(\d+)|-\w+)(?(?=\.).(\d+))$/) {
-            $product_name = $1;
-            $truenas_version = sprintf("%02d%02d%02d%02d", $2, $3 || 0, $4 || 0, $6 || 0);
-            $truenas_release_type = $5 || "Production";
-        } elsif ($result =~ /^(TrueNAS-SCALE)-(\d+)\.(\d+)(?(?=\-)-(\w+))\.(\d+)(?(?=\.)\.(\d+))(?(?=\-)-(\d+))$/) {
-            $product_name = $1;
-            $truenas_version = sprintf("%02d%02d%02d%02d", $2, $3 || 0, $5 || 0, $7 || 0);
-            $truenas_release_type = $4 || "Production";
-        } else {
-            $product_name = "Unknown";
-            $truenas_release_type = "Unknown";
-            syslog("error", (caller(0))[3] . " : Could not parse the version of TrueNAS.");
-        }
-        syslog("info", (caller(0))[3] . " : ". $product_name . " Unformatted Version: " . $truenas_version);
-        if ($truenas_version >= 11030100) {
-            $truenas_api_version = "v2.0";
-            $dev_prefix = "/dev/";
-        }
-        if ($truenas_release_type ne "Production") {
-            syslog("warn", (caller(0))[3] . " : The '" . $product_name . "' release type of '" . $truenas_release_type . "' may not worked due to unsupported changes.");
-        }
-    } else {
-        syslog("info", (caller(0))[3] . " : REST Client already initialized");
-    }
-    syslog("info", (caller(0))[3] . " : Using " . $product_name . " API version " . $truenas_api_version);
-    $truenas_api_methods   = $truenas_api_version_matrix->{$truenas_api_version}->{'methods'};
-    $truenas_api_variables = $truenas_api_version_matrix->{$truenas_api_version}->{'variables'};
-    $truenas_global_config = $truenas_global_config_list->{$apihost} = (!defined($truenas_global_config_list->{$apihost})) ? truenas_iscsi_get_globalconfiguration($scfg) : $truenas_global_config_list->{$apihost};
-    return;
+    my ($scfg) = @_;
+    syslog('info','truenas_api_check');
+    truenas_api_connect($scfg);
+    my $content = $SERVER_LIST{$scfg->{truenas_apiv4_host}//$scfg->{portal}}->responseContent;
+    # parse version string from $content, set $PRODUCT_NAME, $TRUENAS_VERSION, $RELEASE_TYPE
+    # select API_VERSION based on version
+    $API_VERSION_MATRIX->{$API_VERSION} or croak "Unsupported API version";
 }
 
-
-#
-### FREENAS API CALLING ROUTINE ###
-#
 sub truenas_api_call {
-    my ($scfg, $method, $path, $data) = @_;
-    my $apihost = defined($scfg->{truenas_apiv4_host}) ? $scfg->{truenas_apiv4_host} : $scfg->{portal};
-
-    syslog("info", (caller(0))[3] . " : called for host '" . $apihost . "'");
-
-    $method = uc($method);
-    if (! $method =~ /^(?>GET|DELETE|POST)$/) {
-        syslog("info", (caller(0))[3] . " : Invalid HTTP RESTful service method '$method'");
-        die "Invalid HTTP RESTful service method '$method' used.";
-    }
-
-    if (! defined $truenas_server_list->{$apihost}) {
-        truenas_api_check($scfg);
-    }
-    $truenas_rest_connection = $truenas_server_list->{$apihost};
-    $truenas_global_config = $truenas_global_config_list->{$apihost};
-    my $json_data = (defined $data) ? encode_json($data) : undef;
-    $truenas_rest_connection->request($method, $path, $json_data);
-    syslog("info", (caller(0))[3] . " : successful");
-    return;
+    my ($scfg,$method,$path,$data)=@_;
+    syslog('info',"API call $method $path");
+    croak "Invalid HTTP method '$method'" unless $method=~m{^(?:GET|POST|DELETE)$};
+    my $host= $scfg->{truenas_apiv4_host}//$scfg->{portal};
+    my $c   = $SERVER_LIST{$host};
+    my $json = defined $data ? encode_json($data) : undef;
+    $c->request($method,$path,$json);
 }
 
-#
-# Writes the Response and Content to SysLog 
-#
 sub truenas_api_log_error {
-    my ($rest_connection) = @_;
-    my $connection = ((defined $rest_connection) ? $rest_connection : $truenas_rest_connection);
-    syslog("info","[ERROR]TrueNAS::API::" . (caller(1))[3] . " : Response code: " . $connection->responseCode());
-    syslog("info","[ERROR]TrueNAS::API::" . (caller(1))[3] . " : Response content: " . $connection->responseContent());
-    return 1;
+    my ($c)=@_;
+    $c //= $_[0];
+    syslog('error','API error code: '.$c->responseCode);
+    syslog('error','API error content: '.$c->responseContent);
 }
 
 #
