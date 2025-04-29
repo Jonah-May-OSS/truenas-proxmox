@@ -1,113 +1,29 @@
---- ZFSPlugin.pm.orig	2023-12-31 09:56:18.895228853 -0500
-+++ ZFSPlugin.pm	2025-04-28 19:20:00.000000000 -0500
-@@ -10,6 +10,7 @@
- use base qw(PVE::Storage::ZFSPoolPlugin);
+@@
  use PVE::Storage::LunCmd::Comstar;
 +use PVE::Storage::LunCmd::TrueNAS;
- use PVE::Storage::LunCmd::Istgt;
- use PVE::Storage::LunCmd::Iet;
- use PVE::Storage::LunCmd::LIO;
-@@ -26,13 +27,14 @@
-     modify_lu   => 1,
-     add_view    => 1,
+@@
      list_view   => 1,
 +    list_extent => 1,
-     list_lu     => 1,
- };
- 
-@@ -40,6 +42,8 @@
+@@
      if ($scfg->{iscsiprovider} eq 'comstar') {
          return PVE::Storage::LunCmd::Comstar::get_base;
 +    } elsif ($scfg->{iscsiprovider} eq 'truenas') {
 +        return PVE::Storage::LunCmd::TrueNAS::get_base;
-     } elsif ($scfg->{iscsiprovider} eq 'istgt') {
-         return PVE::Storage::LunCmd::Istgt::get_base;
-     } elsif ($scfg->{iscsiprovider} eq 'iet') {
-@@ -62,6 +66,8 @@
-     if ($lun_cmds->{$method}) {
-         if ($scfg->{iscsiprovider} eq 'comstar') {
-             $msg = PVE::Storage::LunCmd::Comstar::run_lun_command($scfg, $timeout, $method, @params);
+@@
+-        } elsif ($scfg->{iscsiprovider} eq 'istgt') {
 +        } elsif ($scfg->{iscsiprovider} eq 'truenas') {
 +            $msg = PVE::Storage::LunCmd::TrueNAS::run_lun_command($scfg, $timeout, $method, @params);
-         } elsif ($scfg->{iscsiprovider} eq 'istgt') {
-             $msg = PVE::Storage::LunCmd::Istgt::run_lun_command($scfg, $timeout, $method, @params);
-         } elsif ($scfg->{iscsiprovider} eq 'iet') {
-@@ -166,6 +172,15 @@
- }
- 
- # Part of the multipath enhancement
-+sub zfs_get_wwid_number {
-+    my ($class, $scfg, $guid) = @_;
-+
-+    die "could not find lun_number for guid $guid" if !$guid;
-+
-+    return $class->zfs_request($scfg, undef, 'list_extent', $guid);
-+}
-+
- # Configuration
- 
- sub type {
-@@ -184,6 +199,32 @@
-     iscsiprovider => {
-         description => "iscsi provider",
-         type        => 'string',
++        } elsif ($scfg->{iscsiprovider} eq 'istgt') {
+@@
+         iscsiprovider => {
+             description => "iscsi provider",
+             type        => 'string',
+-    },
 +    },
 +
 +    # — TrueNAS API integration —
-+    truenas_user       => {
-+        description => "TrueNAS API Username",
-+        type        => 'string',
-+        optional    => 1,
-+    },
-+    truenas_password   => {
-+        description => "TrueNAS API Password (deprecated)",
-+        type        => 'string',
-+        optional    => 1,
-+    },
-+    truenas_secret     => {
-+        description => "TrueNAS API Secret",
-+        type        => 'string',
-+        format      => 'password',
-+        optional    => 1,
-+    },
-+    truenas_token_auth => {
-+        description => "Use token (Bearer) auth",
-+        type        => 'boolean',
-+        default     => 0,
-+        optional    => 1,
-+    },
-+    truenas_use_ssl    => {
-+        description => "Connect to TrueNAS API over HTTPS",
-+        type        => 'boolean',
-+        default     => 1,
-+        optional    => 1,
-+    },
-+    truenas_apiv4_host => {
-+        description => "TrueNAS API host (overrides portal)",
-+        type        => 'string',
-+        optional    => 1,
-     },
- 
-@@ -211,14 +252,20 @@
-     nodes => { optional => 1 },
-     disable => { optional => 1 },
-     portal => { fixed => 1 },
--    target => { fixed => 1 },
--    pool => { fixed => 1 },
-+    target => { fixed => 0 },
-+    pool   => { fixed => 0 },
-     blocksize => { fixed => 1 },
-     iscsiprovider => { fixed => 1 },
-     nowritecache => { optional => 1 },
-     sparse => { optional => 1 },
-     comstar_hg => { optional => 1 },
-     comstar_tg => { optional => 1 },
-+    truenas_user       => { optional => 1 },
-+    truenas_password   => { optional => 1 },
-+    truenas_secret     => { optional => 1 },
-+    truenas_token_auth => { optional => 1 },
-+    truenas_use_ssl    => { optional => 1 },
-+    truenas_apiv4_host => { optional => 1 },
-     lio_tpg => { optional => 1 },
-     content => { optional => 1 },
-     bwlimit => { optional => 1 },
++    truenas_user       => { description => "TrueNAS API Username",      type => 'string',      optional => 1 },
++    truenas_secret     => { description => "TrueNAS API Secret",        type => 'string',      format => 'password', optional => 1 },
++    truenas_token_auth => { description => "Use token (Bearer) auth",   type => 'boolean',     default => 0,           optional => 1 },
++    truenas_use_ssl    => { description => "Connect via HTTPS",         type => 'boolean',     default => 1,           optional => 1 },
++    truenas_apiv4_host => { description => "API host override",         type => 'string',      optional => 1 },
