@@ -24,12 +24,6 @@ use MIME::Base64 qw(encode_base64);
 use JSON::MaybeXS qw(encode_json decode_json);
 use PVE::SafeSyslog qw(syslog);
 
-# Global variable definitions
-my $truenas_server_list = undef;           # API connection HashRef using the IP address of the server
-my $truenas_rest_connection = undef;       # Pointer to entry in $truenas_server_list
-my $truenas_global_config_list = undef;    # IQN HashRef using the IP address of the server
-my $truenas_global_config = undef;         # Pointer to entry in $truenas_global_config_list
-
 # constants & globals
 use constant MAX_LUNS => 255;                       # Max LUNS per target on the iSCSI server
 our %SERVER_LIST;
