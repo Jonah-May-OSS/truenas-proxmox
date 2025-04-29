@@ -94,6 +94,7 @@ my $API_VERSION_MATRIX = {
                     type => 'DISK',
                     name => '$name',
                     disk => '$device',
+                    unmap  => JSON::false,     # disable GET_LBA_STATUS
                 },
             },
             targetextent => {
