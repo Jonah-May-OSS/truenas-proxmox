@@ -27,6 +27,9 @@ Latest nightly:
   - Fork repository to begin update work 
   - Remove donation link from readme
   - Create new Cloudsmith repos to point new code to
+  - Cleaned up files and folders to minimize complexity
+  - Updated all FreeNAS references to say TrueNAS
+  - Configured semi-automated beta builds based off commits to master
   
   </details>
 
@@ -54,8 +57,6 @@ Latest nightly:
 ## Roadmap
 <details><summary>Roadmap details</summary>
 
-* Change FreeNAS references to TrueNAS - <i> Implemented, Pending Testing</i>.
-* Fork freenas-proxmox-packer and set up - <i> Completed, Pending Testing</i>.
 * Port wiki to new fork
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
   * Update static references in the packer YAML
