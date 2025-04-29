@@ -73,7 +73,6 @@ Latest nightly:
   * https://github.com/TheGrandWazoo/freenas-proxmox/issues/150
 * Fix automated builds - <i>In Progress</i>.
   * General Releases
-  * Beta Releases
   * Alpha/Nightly Releases
 * Autoinstall the SSH keys.
   * Tech spike to see if it is even doable.
