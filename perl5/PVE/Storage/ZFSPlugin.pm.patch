@@ -1,7 +1,6 @@
 --- ZFSPlugin.pm.orig	2023-12-31 09:56:18.895228853 -0500
 +++ ZFSPlugin.pm	2023-12-31 09:57:08.830488875 -0500
 @@ -10,6 +10,7 @@
- 
  use base qw(PVE::Storage::ZFSPoolPlugin);
  use PVE::Storage::LunCmd::Comstar;
 +use PVE::Storage::LunCmd::TrueNAS;
@@ -15,17 +14,7 @@
 +    list_extent => 1,
      list_lu     => 1,
  };
- 
- my $zfs_unknown_scsi_provider = sub {
-     my ($provider) = @_;
- 
--    die "$provider: unknown iscsi provider. Available [comstar, istgt, iet, LIO]";
-+    die "$provider: unknown iscsi provider. Available [comstar, truenas, istgt, iet, LIO]";
- };
- 
- my $zfs_get_base = sub {
 @@ -40,6 +42,8 @@
- 
      if ($scfg->{iscsiprovider} eq 'comstar') {
          return PVE::Storage::LunCmd::Comstar::get_base;
 +    } elsif ($scfg->{iscsiprovider} eq 'truenas') {
@@ -62,8 +51,7 @@
  	    description => "iscsi provider",
  	    type => 'string',
  	},
-+	# This is for TrueNAS iscsi and API intergration
-+	# And some enhancements asked by the community
++	# This is for TrueNAS iscsi and API integration
 +	truenas_user => {
 +	    description => "TrueNAS API Username",
 +	    type => 'string',
@@ -154,3 +142,31 @@
 +
      return ($path, $vmid, $vtype);
  }
++
++use PVE::Storage::Plugin;
++
++PVE::Storage::Plugin->register_storage(
++    type       => 'zfs',
++    plugin     => __PACKAGE__,
++    properties => __PACKAGE__->properties,
++    options    => __PACKAGE__->options,
++    methods    => {
++        path                     => 1,
++        create_base              => 1,
++        clone_image              => 1,
++        alloc_image              => 1,
++        free_image               => 1,
++        volume_resize            => 1,
++        volume_snapshot_delete   => 1,
++        volume_snapshot_rollback => 1,
++        storage_can_replicate    => 1,
++        volume_has_feature       => 1,
++        activate_storage         => 1,
++        deactivate_storage       => 1,
++        activate_volume          => 1,
++        deactivate_volume        => 1,
++    },
++    content => { images => 1 },
++);
++
++1;
