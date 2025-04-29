@@ -1,37 +1,37 @@
-@@ -180,6 +180,14 @@ sub type {
-    iscsiprovider => {
-        description => "iscsi provider",
-        type        => 'string',
--   },
-+   },
-+
-+   # — TrueNAS API integration —
-+   truenas_user       => {
-+       description => "TrueNAS API Username",
-+       type        => 'string',
-+       optional    => 1,
-+   },
-+   truenas_secret     => {
-+       description => "TrueNAS API Password or Token",
-+       type        => 'string',
-+       format      => 'password',
-+       optional    => 1,
-+   },
-+   truenas_token_auth => {
-+       description => "Use token (Bearer) authentication",
-+       type        => 'boolean',
-+       default     => 0,
-+       optional    => 1,
-+   },
-+   truenas_use_ssl    => {
-+       description => "Connect to TrueNAS API over HTTPS",
-+       type        => 'boolean',
-+       default     => 1,
-+       optional    => 1,
-+   },
-+   truenas_apiv4_host => {
-+       description => "TrueNAS API host (overrides portal)",
-+       type        => 'string',
-+       optional    => 1,
-+   },
-    },
+@@ -180,6 +180,21 @@ sub type {
+         iscsiprovider => {
+             description => "iscsi provider",
+             type        => 'string',
+-        },
++        },
+
++        # TrueNAS API integration
++        truenas_user       => {
++            description => "TrueNAS API Username",
++            type        => 'string',
++            optional    => 1,
++        },
++        truenas_secret     => {
++            description => "TrueNAS API Password or Token",
++            type        => 'string',
++            format      => 'password',
++            optional    => 1,
++        },
++        truenas_token_auth => {
++            description => "Use token (Bearer) authentication",
++            type        => 'boolean',
++            default     => 0,
++            optional    => 1,
++        },
++        truenas_use_ssl    => {
++            description => "Connect to TrueNAS API over HTTPS",
++            type        => 'boolean',
++            default     => 1,
++            optional    => 1,
++        },
++        truenas_apiv4_host => {
++            description => "TrueNAS API host (overrides portal)",
++            type        => 'string',
++            optional    => 1,
++        },
+     },
