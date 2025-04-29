@@ -30,6 +30,7 @@ Latest nightly:
   - Cleaned up files and folders to minimize complexity
   - Updated all FreeNAS references to say TrueNAS
   - Configured semi-automated beta builds based off commits to master
+  - Rewrite TrueNAS.pm storage plugin to use SSH instead of REST API due to deprecation in 25.04.
   
   </details>
 
@@ -64,8 +65,6 @@ Latest nightly:
 * Optimize code with ChatGPT/Copilot
 * Fix iSCSI errors
   * Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
-* Update REST API to fix deprecations
-  * https://github.com/TheGrandWazoo/freenas-proxmox/issues/205
 * Update the documentation - <i>In Progress</i>.
   * Restructure the main README.md for better readability. 
   * Add some screenshots.
@@ -83,10 +82,7 @@ Latest nightly:
   * Remove the need for git dependency.
 * Change to LWP::UserAgent
   * Remove dependency of the REST::Client because LWP::UserAgent is already installed and used by Proxmox VE.
-* Add API key for direct TrueNAS services - <i>In Progress</i>.
-  * Will be a new enable field and API key and will only be used by the plugin.
-  * You will still need the SSH keys, username, and password because of Proxmox VE using `iscsiadm` to get the list of disks.
-    * This is tricky because the format needs to be that of the output of 'zfs list' which is not part of the LunCmd but that of the backend Proxmox VE system and the API's do a bunch of JSON stuff.
+* Remove API key option so only username and password can be used.
 
 </details>
 
@@ -202,9 +198,11 @@ Latest nightly:
 
 ## Notes:
 
-### Please be aware that this plugin uses the TrueNAS APIs but still uses SSH keys due to the underlying Proxmox VE perl modules that use the ```iscsiadm``` command.
+### Please note this has only been tested with Proxmox 8.4 and TrueNAS SCALE 25.04. The new midclt tool is leveraged, meaning this utility is incompatible with TrueNAS Core and SCALE versions older than 24.10. 24.10 included the utility with experimental support, so while this code may work with it, it is untested and unsupported.
 
-You will still need to configure the SSH connector for listing the ZFS Pools because this is currently being done in a Proxmox module (ZFSPoolPlugin.pm). To configure this please follow the steps at https://pve.proxmox.com/wiki/Storage:_ZFS_over_iSCSI that have to do with SSH between Proxmox VE and TrueNAS. The code segment should start out `mkdir /etc/pve/priv/zfs`.
+### Please be aware that this plugin uses SSH keys due to the TrueNAS API being deprecated and due to the underlying Proxmox VE perl modules that use the ```iscsiadm``` command.
+
+You will need to configure the SSH connector for listing the ZFS Pools because this is currently being done in a Proxmox module (ZFSPoolPlugin.pm). To configure this please follow the steps at https://pve.proxmox.com/wiki/Storage:_ZFS_over_iSCSI that have to do with SSH between Proxmox VE and TrueNAS. The code segment should start out `mkdir /etc/pve/priv/zfs`.
 
 1. Remember to follow the instructions mentioned above for the SSH keys.
 
