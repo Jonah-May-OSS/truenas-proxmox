@@ -30,7 +30,7 @@ Latest nightly:
   - Cleaned up files and folders to minimize complexity
   - Updated all FreeNAS references to say TrueNAS
   - Configured semi-automated beta builds based off commits to master
-  - Rewrite TrueNAS.pm storage plugin to use SSH instead of REST API due to deprecation in 25.04.
+  - Rewrite TrueNAS.pm storage plugin to use SSH and webhook CLI tool instead of REST API due to deprecation in 25.04.
   
   </details>
 
@@ -62,7 +62,6 @@ Latest nightly:
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
   * Update static references in the packer YAML
   * Update static references in the control files
-* Optimize code with ChatGPT/Copilot
 * Fix iSCSI errors
   * Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
 * Update the documentation - <i>In Progress</i>.

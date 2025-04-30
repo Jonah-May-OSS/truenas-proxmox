@@ -3,7 +3,7 @@ package PVE::Storage::LunCmd::TrueNAS;
 use strict;
 use warnings;
 use Carp qw(croak);
-use JSON::MaybeXS qw(decode_json encode_json);
+use JSON::MaybeXS qw(decode_json);
 use PVE::Tools qw(run_command);
 use PVE::SafeSyslog qw(syslog);
 
@@ -48,7 +48,6 @@ sub _debug_cmd {
     return $res;
 }
 
-
 # Main dispatcher
 sub run_lun_command {
     my ($scfg, $timeout, $method, @params) = @_;
@@ -60,13 +59,13 @@ sub run_lun_command {
 
     return _create_lu($scfg, $timeout,  $params[0]) if $method =~ /^(create|import)_lu$/;
     return _delete_lu($scfg, $timeout,  $params[0]) if $method eq 'delete_lu';
+    return _modify_lu($scfg,  $timeout, $params[0])  if $method eq 'modify_lu';
     if ($method eq 'modify_lu') {
         _delete_lu($scfg, $timeout, $params[0]);
         return _create_lu($scfg, $timeout, $params[0]);
     }
     return _list_lu($scfg, $timeout,    $params[0]) if $method eq 'list_lu';
-    return _list_extent($scfg, $timeout, $params[0]) if $method eq 'list_extent';
-    return _list_naa($scfg, $timeout,    $params[0]) if $method eq 'list_naa';
+    return _list_view($scfg, $timeout,   $params[0]) if $method eq 'list_view';
     return 1 if $method eq 'add_view';
     croak "TrueNAS: unknown method '$method'";
 }
@@ -80,17 +79,20 @@ sub _create_lu {
     my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
     my $host   = "root\@$portal";
 
-    # derive dataset and name
-    (my $zpath = $zvol) =~ s{^/dev/}{};
-    (my $name  = $zpath) =~ s{^.*/}{};
+    # derive dataset path and unique name
+    (my $disk_path = $zvol) =~ s{^/dev/}{};    # "/dev/zvol/SSD01/vm-109-disk-0" → "zvol/SSD01/vm-109-disk-0"
+    (my $name      = $disk_path) =~ s{^zvol/}{}; # "zvol/SSD01/vm-109-disk-0" → "SSD01/vm-109-disk-0"
 
     # build and exec create extent command
-    my $payload = "'{\"name\":\"$name\",\"type\":\"DISK\",\"disk\":\"$zpath\"}'";
+    my $payload = "'{ \"name\": \"$name\", \"type\": \"DISK\", \"disk\": \"$disk_path\" }'";
     syslog('debug', "_create_lu payload: $payload");
-    my @cmd = ('/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host, "midclt", "call", "iscsi.extent.create", $payload);
+    my @cmd = (
+        '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+        'midclt', 'call', 'iscsi.extent.create', $payload
+    );
+
     my $res = _debug_cmd(\@cmd, $timeout);
-    croak "TrueNAS: extent.create failed (exit=$res->{exitcode}): $res->{err}"
-        if $res->{exitcode} != 0;
+    croak "TrueNAS: extent.create failed (exit=$res->{exitcode}): $res->{err}" if $res->{exitcode} != 0;
 
     # decode JSON and extract the new extent ID
     my $data = decode_json($res->{out} || '[]');
@@ -108,43 +110,102 @@ sub _create_lu {
 
     # map the extent to the target
     my $tid = _query_target_id($scfg, $timeout);
-    my $map = "'{\"target\":$tid,\"extent\":$eid}'";
-    syslog('debug', "_create_lu map: $map");
-    @cmd = ('/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host, "midclt", "call", "iscsi.targetextent.create", $map);
-    _debug_cmd(\@cmd, $timeout);
+    my $map_payload = "'{ \"target\" : $tid, \"extent\" : $eid}'";
+    syslog('debug', "_create_lu map payload: $map_payload");
+    @cmd = (
+        '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+        'midclt', 'call', 'iscsi.targetextent.create', $map_payload
+    );
+    my $map_res = _debug_cmd(\@cmd, $timeout);
+    croak "TrueNAS: targetextent.create failed (exit=$map_res->{exitcode}): $map_res->{err}" if $map_res->{exitcode} != 0;
 
     return $eid;
 }
 
-# Delete extent and unmap LUNs
-sub _delete_lu {
+# No-op for when PVE wants to “modify” a zvol (e.g. after a resize)
+# TrueNAS extents automatically reflect the underlying zvol size,
+# so there’s nothing to do here.
+sub _modify_lu {
     my ($scfg, $timeout, $zvol) = @_;
     croak "TrueNAS: missing zvol" unless defined $zvol;
+    syslog('debug', "_modify_lu no action for extent $zvol");
+    return undef;
+}
+
+sub _delete_lu {
+    my ($scfg, $timeout, $param) = @_;
+    croak "TrueNAS: missing identifier" unless defined $param;
+
     my $portal = $scfg->{portal};
     my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
     my $host   = "root\@$portal";
 
-    for my $teid (@{ _list_targetextent_ids($scfg, $timeout, $zvol) }) {
-        my $up = encode_json({ id => $teid });
-        syslog('debug', "_delete_lu unmap: $up");
-        my $cmd = qq(midclt call iscsi.targetextent.delete '$up');
-        _debug_cmd(['/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host, $cmd], $timeout);
+    # determine mapping‐record ID and extent ID
+    my ($map_id, $eid);
+    if ($param =~ /^\d+$/) {
+        # treat $param as the mapping‐record ID
+        $map_id = $param;
+        my $f = qq('[[ "id","=",$map_id ]]');
+        my $res = _debug_cmd(
+            ['/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+             'midclt','call','iscsi.targetextent.query',$f],
+            $timeout
+        );
+        my $arr = decode_json($res->{out} || '[]');
+        croak "TrueNAS: no mapping $map_id" unless @$arr;
+        $eid = $arr->[0]{extent};
+    }
+    else {
+        # treat $param as an extent ID/path
+        $eid    = _query_extent_id($scfg, $timeout, $param);
+        ($map_id) = @{ _list_targetextent_ids($scfg, $timeout, $param) };
     }
 
-    my $eid = _query_extent_id($scfg, $timeout, $zvol);
-    my $dp  = encode_json({ id => $eid });
-    syslog('debug', "_delete_lu delete: $dp");
-    my $cmd = qq(midclt call iscsi.extent.delete '$dp');
-    _debug_cmd(['/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host, $cmd], $timeout);
+    # 1) delete the mapping
+    syslog('debug', "_delete_lu unmap mapping: $map_id");
+    _debug_cmd(
+      ['/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+       'midclt','call','iscsi.targetextent.delete',$map_id,'true'],
+      $timeout
+    );
+
+    # 2) delete the extent
+    syslog('debug', "_delete_lu delete extent: $eid");
+    _debug_cmd(
+      ['/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+       'midclt','call','iscsi.extent.delete',$eid,'true'],
+      $timeout
+    );
 
     return 1;
 }
 
-# List first LUN ID
+
+# Return the mapping-record ID for the given extent (vol GUID or path)
 sub _list_lu {
-    my ($scfg, $timeout, $zvol) = @_;
-    my $ids = _list_targetextent_ids($scfg, $timeout, $zvol);
-    return $ids->[0] if @$ids;
+    my ($scfg, $timeout, $extent) = @_;
+    croak "TrueNAS: missing extent identifier" unless defined $extent;
+
+    # normalize to numeric extent ID
+    my $eid = _query_extent_id($scfg, $timeout, $extent);
+
+    # build and run the targetextent.query for this extent
+    my $portal = $scfg->{portal};
+    my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
+    my $host   = "root\@$portal";
+    my $filter = "'[[ \"extent\", \"=\", $eid ]]'";
+    syslog('debug', "_list_lu filter: $filter");
+    my @cmd = (
+        '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+        'midclt', 'call', 'iscsi.targetextent.query', $filter
+    );
+    my $res = _debug_cmd(\@cmd, $timeout);
+    croak "TrueNAS: targetextent.query failed (exit=$res->{exitcode}): $res->{err}"
+        if $res->{exitcode} != 0;
+
+    # parse JSON and return the first mapping-record ID
+    my $arr = decode_json($res->{out} || '[]');
+    return $arr->[0]{id} if ref($arr) eq 'ARRAY' && @$arr;
     return;
 }
 
@@ -154,45 +215,66 @@ sub _list_extent {
     my $portal = $scfg->{portal};
     my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
     my $host   = "root\@$portal";
-    (my $name = $zvol) =~ s{^.*/}{};
-    my $f = encode_json([[ 'path', '=', "zvol/$name" ]]);
-    syslog('debug', "_list_extent filter: $f");
-    my @cmd = ('/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
-        qq(midclt call iscsi.extent.query '$f'));
-    my $out = _debug_cmd(\@cmd, $timeout)->{out};
-    my $arr = decode_json($out||'[]');
-    return $arr->[0]{path} if @$arr;
+    # use full zvol path
+    my $filter = "'[[ \"path\", \"=\", \"$zvol\" ]]'";
+    syslog('debug', "_list_extent filter: $filter");
+    my @cmd = (
+        '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+        'midclt', 'call', 'iscsi.extent.query', $filter
+    );
+    my $res = _debug_cmd(\@cmd, $timeout);
+    croak "TrueNAS: extent.query failed (exit=$res->{exitcode}): $res->{err}" if $res->{exitcode} != 0;
+
+    my $arr = decode_json($res->{out} || '[]');
+    return $arr->[0]{path} if (ref($arr) eq 'ARRAY' && @$arr);
     return;
 }
 
-# Query NAA
-sub _list_naa {
-    my ($scfg, $timeout, $zvol) = @_;
+# Given that mapping-record ID, return its LUN number
+sub _list_view {
+    my ($scfg, $timeout, $mapid) = @_;
+    croak "TrueNAS: missing mapping ID" unless defined $mapid;
+
     my $portal = $scfg->{portal};
     my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
     my $host   = "root\@$portal";
-    (my $name = $zvol) =~ s{^.*/}{};
-    my $f = encode_json([[ 'path', '=', "zvol/$name" ]]);
-    syslog('debug', "_list_naa filter: $f");
-    my @cmd = ('/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
-        qq(midclt call iscsi.extent.query '$f'));
-    my $out = _debug_cmd(\@cmd, $timeout)->{out};
-    my $arr = decode_json($out||'[]');
-    return $arr->[0]{naa} if @$arr;
-    return;
+    my $filter = "'[[ \"id\", \"=\", $mapid ]]'";
+    syslog('debug', "_list_view filter: $filter");
+    my @cmd = (
+        '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+        'midclt', 'call', 'iscsi.targetextent.query', $filter
+    );
+    my $res = _debug_cmd(\@cmd, $timeout);
+    croak "TrueNAS: targetextent.query failed (exit=$res->{exitcode}): $res->{err}"
+        if $res->{exitcode} != 0;
+
+    my $arr = decode_json($res->{out} || '[]');
+    croak "TrueNAS: no mapping found for ID $mapid"
+        unless ref($arr) eq 'ARRAY' && @$arr;
+
+    my $lun = $arr->[0]{lunid};
+    croak "TrueNAS: invalid lunid for mapping $mapid"
+        unless defined($lun) && $lun =~ /^\d+$/;
+
+    return "$lun";
 }
 
-# Helper: query extent ID
+# Helper: query extent ID (accepts either numeric ID or full zvol path)
 sub _query_extent_id {
-    my ($scfg, $timeout, $zvol) = @_;
-    croak "TrueNAS: missing zvol" unless defined $zvol;
+    my ($scfg, $timeout, $val) = @_;
+    croak "TrueNAS: missing extent identifier" unless defined $val;
 
     my $portal = $scfg->{portal};
     my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
     my $host   = "root\@$portal";
 
-    # build JSON filter for full path
-    my $filter = encode_json([[ 'path', '=', $zvol ]]);
+    # build filter based on whether $val is numeric (id) or not (path)
+    my $filter;
+    if ($val =~ /^\d+$/) {
+        $filter = "'[[ \"id\", \"=\", $val ]]'";
+    } else {
+        $filter = "'[[ \"path\", \"=\", \"$val\" ]]'";
+    }
     syslog('debug', "_query_extent_id filter: $filter");
 
     # run the SSH command
@@ -201,24 +283,15 @@ sub _query_extent_id {
         'midclt', 'call', 'iscsi.extent.query', $filter
     );
     my $res = _debug_cmd(\@cmd, $timeout);
-
     croak "TrueNAS: extent.query failed (exit=$res->{exitcode}): $res->{err}"
         if $res->{exitcode} != 0;
 
-    # decode JSON response
+    # parse JSON and extract id
     my $data = decode_json($res->{out} || '[]');
-
-    # extract the ID
     my $eid;
-    if (ref($data) eq 'ARRAY' && @$data) {
-        $eid = $data->[0]{id};
-    }
-    elsif (ref($data) eq 'HASH') {
-        $eid = $data->{id};
-    }
-    else {
-        croak "TrueNAS: unexpected JSON from extent.query: $res->{out}";
-    }
+    if      (ref($data) eq 'ARRAY' && @$data) { $eid = $data->[0]{id} }
+    elsif   (ref($data) eq 'HASH')            { $eid = $data->{id} }
+    else   { croak "TrueNAS: unexpected JSON from extent.query: $res->{out}" }
 
     syslog('debug', "_query_extent_id extracted extent ID: $eid");
     return $eid;
@@ -232,21 +305,14 @@ sub _query_target_id {
     my $host   = "root\@$portal";
 
     syslog('debug', "_query_target_id");
-
-    # build and run the SSH command
     my @cmd = (
         '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
         'midclt', 'call', 'iscsi.target.query'
     );
     my $res = _debug_cmd(\@cmd, $timeout);
+    croak "TrueNAS: target.query failed (exit=$res->{exitcode}): $res->{err}" if $res->{exitcode} != 0;
 
-    croak "TrueNAS: target.query failed (exit=$res->{exitcode}): $res->{err}"
-        if $res->{exitcode} != 0;
-
-    # decode the JSON response
     my $data = decode_json($res->{out} || '[]');
-
-    # extract the ID
     my $tid;
     if (ref($data) eq 'ARRAY' && @$data) {
         $tid = $data->[0]{id};
@@ -257,26 +323,56 @@ sub _query_target_id {
     else {
         croak "TrueNAS: unexpected JSON from target.query: $res->{out}";
     }
-
     syslog('debug', "_query_target_id extracted target ID: $tid");
     return $tid;
 }
 
-
-# Helper: list targetextent IDs
+# Helper: return an ARRAYREF of mapping‐record IDs for a given extent
 sub _list_targetextent_ids {
     my ($scfg, $timeout, $zvol) = @_;
-    my $eid  = _query_extent_id($scfg, $timeout, $zvol);
+    croak "TrueNAS: missing zvol" unless defined $zvol;
+
+    # get the numeric extent ID
+    my $eid = _query_extent_id($scfg, $timeout, $zvol);
     my $portal = $scfg->{portal};
     my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
     my $host   = "root\@$portal";
-    my $f      = encode_json([[ 'extent', '=', $eid ]]);
-    syslog('debug', "_list_targetextent_ids filter: $f");
-    my @cmd = ('/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
-        qq(midclt call iscsi.targetextent.query '$f'));
-    my $out = _debug_cmd(\@cmd, $timeout)->{out};
-    my $arr = decode_json($out||'[]');
+
+    # query the mappings
+    my $filter = "'[[ \"extent\", \"=\", $eid ]]'";
+    my @cmd    = (
+        '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+        'midclt', 'call', 'iscsi.targetextent.query', $filter
+    );
+    my $res = _debug_cmd(\@cmd, $timeout);
+    croak "TrueNAS: targetextent.query failed (exit=$res->{exitcode})"
+        if $res->{exitcode} != 0;
+
+    my $arr = decode_json($res->{out} || '[]');
     return [ map { $_->{id} } @$arr ];
+}
+
+# Helper: return an ARRAYREF of the actual LUN numbers for a given extent
+sub _list_lun_ids {
+    my ($scfg, $timeout, $zvol) = @_;
+    croak "TrueNAS: missing zvol" unless defined $zvol;
+
+    # same query as above, but pull lunid
+    my $eid = _query_extent_id($scfg, $timeout, $zvol);
+    my $portal = $scfg->{portal};
+    my $key    = "$ID_RSA_PATH/${portal}_id_rsa";
+    my $host   = "root\@$portal";
+    my $filter = "'[[ \"extent\", \"=\", $eid ]]'";
+    my @cmd    = (
+        '/usr/bin/ssh', @SSH_OPTS, '-i', $key, $host,
+        'midclt', 'call', 'iscsi.targetextent.query', $filter
+    );
+    my $res = _debug_cmd(\@cmd, $timeout);
+    croak "TrueNAS: targetextent.query failed (exit=$res->{exitcode})"
+        if $res->{exitcode} != 0;
+
+    my $arr = decode_json($res->{out} || '[]');
+    return [ map { $_->{lunid} } @$arr ];
 }
 
 1;
