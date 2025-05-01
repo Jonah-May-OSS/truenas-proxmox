@@ -25,7 +25,7 @@ Latest nightly:
   <details><summary>2025-05-01</summary>
 
    - Document migrating from freenas-proxmox to truenas-proxmox
-   
+
   </details>
   
   <details><summary>2025-04-28</summary>
@@ -68,8 +68,8 @@ Latest nightly:
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
   * Update static references in the packer YAML
   * Update static references in the control files
-* Fix iSCSI errors
-  * Fix iSCSI errors https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
+* Fix LBA warnings
+  * Fix LBA warnings https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
 * Update the documentation - <i>In Progress</i>.
   * Restructure the main README.md for better readability. 
   * Add some screenshots.
@@ -83,10 +83,6 @@ Latest nightly:
 * Hashicorp Vault integration.
   * Pull in secrets from a Hashicorp Vault service.  
   * Tech spike to see if it is even doable.
-* Package the patches with the deb package.
-  * Remove the need for git dependency.
-* Change to LWP::UserAgent
-  * Remove dependency of the REST::Client because LWP::UserAgent is already installed and used by Proxmox VE.
 * Remove API key option so only username and password can be used.
 
 </details>
