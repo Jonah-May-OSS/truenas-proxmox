@@ -28,4 +28,4 @@ Latest nightly:
 
 ## Notes:
 
-### Please note this has only been tested with Proxmox 8.4 and TrueNAS SCALE 25.04. The new midclt tool is leveraged, meaning this utility is incompatible with TrueNAS Core and SCALE versions older than 24.10. 24.10 included the utility with experimental support, so while this code may work with it, it is untested and unsupported.
+#### Please note this has only been tested with Proxmox 8.4 and TrueNAS SCALE 25.04. The new midclt tool is leveraged, meaning this utility is incompatible with TrueNAS Core and SCALE versions older than 24.10. 24.10 included the utility with experimental support, so while this code may work with it, it is untested and unsupported.
