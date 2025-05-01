@@ -21,6 +21,10 @@ Latest nightly:
  <summary>Expand to see the activity tree</summary>
 
  <blockquote>
+
+  <details><summary>2025-05-01</summary>
+   - Document migrating from freenas-proxmox to truenas-proxmox
+  </details>
   
   <details><summary>2025-04-28</summary>
   
@@ -31,7 +35,6 @@ Latest nightly:
   - Updated all FreeNAS references to say TrueNAS
   - Configured semi-automated beta builds based off commits to master
   - Rewrite TrueNAS.pm storage plugin to use SSH and webhook CLI tool instead of REST API due to deprecation in 25.04.
-  - Document migrating from freenas-proxmox to truenas-proxmox
   
   </details>
 
