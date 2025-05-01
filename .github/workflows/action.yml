@@ -5,6 +5,10 @@ on:
     paths-ignore:
       - 'README.md'
       - './github/**'
+      - './github/workflows'
+      - 'renovate.json'
+      - 'dependabot.yml'
+      - 'action.yml'
 
 jobs:
   dispatch:
