@@ -25,6 +25,7 @@ Latest nightly:
   <details><summary>2025-05-01</summary>
 
    - Document migrating from freenas-proxmox to truenas-proxmox
+   - Apply ZFSPlugin.pm and UI tweaks via sed instead of patch files so they can be universal for versions
 
   </details>
   
@@ -64,7 +65,7 @@ Latest nightly:
 ## Roadmap
 <details><summary>Roadmap details</summary>
 
-* Port wiki to new fork
+* Port wiki to new fork and build it out
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
   * Update static references in the packer YAML
   * Update static references in the control files
@@ -83,7 +84,6 @@ Latest nightly:
 * Hashicorp Vault integration.
   * Pull in secrets from a Hashicorp Vault service.  
   * Tech spike to see if it is even doable.
-* Remove API key option so only username and password can be used.
 
 </details>
 
