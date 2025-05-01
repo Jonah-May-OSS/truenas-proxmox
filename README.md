@@ -14,63 +14,12 @@ Latest nightly:
 
 [![Latest nightly version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-snapshots/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-snapshots/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
 
-
-## Activity
-
-<details>
- <summary>Expand to see the activity tree</summary>
-
- <blockquote>
-
-  <details><summary>2025-05-01</summary>
-
-   - Document migrating from freenas-proxmox to truenas-proxmox
-   - Apply ZFSPlugin.pm and UI tweaks via sed instead of patch files so they can be universal for versions
-   - Remove REST API custom fields for storage since it is no longer used
-   - Enable dependabot, renovate, and CodeQL scans
-
-  </details>
-  
-  <details><summary>2025-04-28</summary>
-  
-  - Fork repository to begin update work 
-  - Remove donation link from readme
-  - Create new Cloudsmith repos to point new code to
-  - Cleaned up files and folders to minimize complexity
-  - Updated all FreeNAS references to say TrueNAS
-  - Configured semi-automated beta builds based off commits to master
-  - Rewrite TrueNAS.pm storage plugin to use SSH and webhook CLI tool instead of REST API due to deprecation in 25.04.
-  
-  </details>
-
-  <details><summary>2023-08-18</summary>
-
-  - Update and cleanup the README.md
-
-  </details>
-
-  <details><summary>2023-08-12</summary>
-   
-  - Fixed postinst issue with Windows-based EOL. https://github.com/TheGrandWazoo/freenas-proxmox/issues/149
-
-  </details>
-
-  <details><summary>2023-02-12</summary>
-   
-  - Added `systemctl restart pvescheduler.service` command to the package based on https://github.com/TheGrandWazoo/freenas-proxmox/issues/109#issuecomment-1367527917
-
-  </details>
-
-  </blockquote>
-</details>
-
 ## Roadmap
 <details><summary>Roadmap details</summary>
 
 * Add install instructions for nightly builds
 * Port install instructions and SSH key guide to wiki to simplify readme
 * Port roadmap to wiki
-* Port activity to wiki
 * Port wiki to new fork and build it out
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
   * Update static references in the packer YAML
