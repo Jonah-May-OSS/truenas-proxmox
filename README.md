@@ -227,7 +227,7 @@ Latest nightly:
 
 * Change iscsiprovider entry from `freenas` to `truenas`
 
-* Edit out of nano, saving the changes
+* Exit out of nano, saving the changes
 
 * Restart the Proxmox services on each host
 ```
