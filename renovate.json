@@ -1,0 +1,14 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "assignees": ["JonahMMay"],
+  "labels": ["renovate"],
+  "packageRules": [
+  {
+    "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+    "automerge": true
+  }
+ ]
+}
