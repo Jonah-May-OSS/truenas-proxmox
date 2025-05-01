@@ -62,32 +62,6 @@
  	    description => "iscsi provider",
  	    type => 'string',
  	},
-+	# This is for TrueNAS iscsi and API intergration
-+	# And some enhancements asked by the community
-+	truenas_user => {
-+	    description => "TrueNAS API Username",
-+	    type => 'string',
-+	},
-+	truenas_password => {
-+	    description => "TrueNAS API Password (Deprecated)",
-+	    type => 'string',
-+	},
-+	truenas_secret => {
-+	    description => "TrueNAS API Secret",
-+	    type => 'string',
-+	},
-+	truenas_token_auth => {
-+	    description => "TrueNAS API Authentication with Token",
-+	    type => 'boolean',
-+	},
-+	truenas_use_ssl => {
-+	    description => "TrueNAS API access via SSL",
-+	    type => 'boolean',
-+	},
-+	truenas_apiv4_host => {
-+	    description => "TrueNAS API Host",
-+	    type => 'string',
-+	},
  	# this will disable write caching on comstar and istgt.
  	# it is not implemented for iet. iet blockio always operates with
  	# writethrough caching when not in readonly mode
@@ -105,12 +79,6 @@
  	sparse => { optional => 1 },
  	comstar_hg => { optional => 1 },
  	comstar_tg => { optional => 1 },
-+	truenas_user => { optional => 1 },
-+	truenas_password => { optional => 1 },
-+	truenas_secret => { optional => 1 },
-+	truenas_token_auth => { optional => 1 },
-+	truenas_use_ssl => { optional => 1 },
-+	truenas_apiv4_host => { optional => 1 },
  	lio_tpg => { optional => 1 },
  	content => { optional => 1 },
  	bwlimit => { optional => 1 },

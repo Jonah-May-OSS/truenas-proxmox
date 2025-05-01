@@ -4,37 +4,6 @@
                             "type" : "string",
                             "typetext" : "<string>"
                          },
-+                        "truenas_user" : {
-+                           "description" : "TrueNAS user for API access",
-+                           "optional" : 1,
-+                           "type" : "string",
-+                           "typetext" : "<string>"
-+                        },
-+                        "truenas_password" : {
-+                           "description" : "TrueNAS password for API access (Deprecated)",
-+                           "optional" : 1,
-+                           "type" : "string",
-+                           "typetext" : "<string>"
-+                        },
-+                        "truenas_secret" : {
-+                           "description" : "TrueNAS Secret for API access",
-+                           "optional" : 1,
-+                           "type" : "string",
-+                           "typetext" : "<string>"
-+                        },
-+                        "truenas_use_ssl" : {
-+                           "description" : "TrueNAS API access via SSL",
-+                           "optional" : 1,
-+                           "type" : "boolean",
-+                           "typetext" : "<boolean>"
-+                        },
-+                        "truenas_apiv4_host" : {
-+                           "description" : "TrueNAS API Host via IPv4",
-+                           "format" : "address",
-+                           "optional" : 1,
-+                           "type" : "string",
-+                           "typetext" : "<string>"
-+                        },
                          "fuse" : {
                             "description" : "Mount CephFS through FUSE.",
                             "optional" : 1,
@@ -55,37 +24,6 @@
                       "optional" : 1,
                       "type" : "string",
                       "typetext" : "<string>"
-+                  },
-+                  "truenas_user" : {
-+                     "description" : "TrueNAS user for API access",
-+                     "optional" : 1,
-+                     "type" : "string",
-+                     "typetext" : "<string>"
-+                  },
-+                  "truenas_password" : {
-+                     "description" : "TrueNAS password for API access (Deprecated)",
-+                     "optional" : 1,
-+                     "type" : "string",
-+                     "typetext" : "<string>"
-+                  },
-+                  "truenas_secret" : {
-+                     "description" : "TrueNAS secret for API access",
-+                     "optional" : 1,
-+                     "type" : "string",
-+                     "typetext" : "<string>"
-+                  },
-+                  "truenas_use_ssl" : {
-+                     "description" : "TrueNAS API access via SSL",
-+                     "optional" : 1,
-+                     "type" : "boolean",
-+                     "typetext" : "<boolean>"
-+                  },
-+                  "truenas_apiv4_host" : {
-+                     "description" : "TrueNAS API Host via IPv4",
-+                     "format" : "address",
-+                     "optional" : 1,
-+                     "type" : "string",
-+                     "typetext" : "<string>"
                    },
                    "fuse" : {
                       "description" : "Mount CephFS through FUSE.",
