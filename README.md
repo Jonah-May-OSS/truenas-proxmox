@@ -27,6 +27,7 @@ Latest nightly:
    - Document migrating from freenas-proxmox to truenas-proxmox
    - Apply ZFSPlugin.pm and UI tweaks via sed instead of patch files so they can be universal for versions
    - Remove REST API custom fields for storage since it is no longer used
+   - Enable dependabot, renovate, and CodeQL scans
 
   </details>
   
@@ -70,7 +71,6 @@ Latest nightly:
 * Port install instructions and SSH key guide to wiki to simplify readme
 * Port roadmap to wiki
 * Port activity to wiki
-* Add dependabot to both repos
 * Port wiki to new fork and build it out
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
   * Update static references in the packer YAML
