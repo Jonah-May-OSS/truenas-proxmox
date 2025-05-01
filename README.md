@@ -195,6 +195,38 @@ Latest nightly:
  
 </details>
 
+## Migrate from freenas-proxmox
+
+<details><summary>If you are migrating from freenas-proxmox and want to migrate the existing ZFS over iSCSI storage volumes, do the following:</summary>
+
+* Edit the cluster storage config on a host with
+```
+ nano /etc/pve/storage.cfg
+```
+
+* Find the storage entry, for example
+```
+ zfs: HDD01
+        blocksize 16k
+        iscsiprovider freenas
+        pool HDD01
+        portal 192.168.5.21
+        target iqn.2005-10.org.freenas.ctl:proxmox01
+        content images
+        nowritecache 0
+        sparse 0
+```
+
+* Change iscsiprovider entry from `freenas` to `truenas`
+
+* Edit out of nano, saving the changes
+
+* Restart the Proxmox services on each host
+```
+ systemctl restart pve-cluster pvedaemon pveproxy
+```
+</details>
+
 ## Notes:
 
 ### Please note this has only been tested with Proxmox 8.4 and TrueNAS SCALE 25.04. The new midclt tool is leveraged, meaning this utility is incompatible with TrueNAS Core and SCALE versions older than 24.10. 24.10 included the utility with experimental support, so while this code may work with it, it is untested and unsupported.
