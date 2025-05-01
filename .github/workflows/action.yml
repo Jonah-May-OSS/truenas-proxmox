@@ -1,14 +1,9 @@
 name: Dispatch build of the truenas-proxmox plugin package
 
 on:
-  push:
-    paths-ignore:
-      - 'README.md'
-      - './github/**'
-      - './github/workflows'
-      - 'renovate.json'
-      - 'dependabot.yml'
-      - 'action.yml'
+  release:
+    types:
+      - published
 
 jobs:
   dispatch:
