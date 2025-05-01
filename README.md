@@ -14,34 +14,6 @@ Latest nightly:
 
 [![Latest nightly version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-snapshots/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-snapshots/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
 
-## Roadmap
-<details><summary>Roadmap details</summary>
-
-* Add install instructions for nightly builds
-* Port install instructions and SSH key guide to wiki to simplify readme
-* Port roadmap to wiki
-* Port wiki to new fork and build it out
-* Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
-  * Update static references in the packer YAML
-  * Update static references in the control files
-* Fix LBA warnings
-  * Fix LBA warnings https://github.com/TheGrandWazoo/freenas-proxmox/issues/203
-* Update the documentation - <i>In Progress</i>.
-  * Restructure the main README.md for better readability. 
-  * Add some screenshots.
-* Fix Max Lun Limit issue.
-  * https://github.com/TheGrandWazoo/freenas-proxmox/issues/150
-* Fix automated builds - <i>In Progress</i>.
-  * General Releases
-  * Alpha/Nightly Releases
-* Autoinstall the SSH keys.
-  * Tech spike to see if it is even doable.
-* Hashicorp Vault integration.
-  * Pull in secrets from a Hashicorp Vault service.  
-  * Tech spike to see if it is even doable.
-
-</details>
-
 ## New Install Instructions
 
 ### Select at least one `Step 1.x` based on your preference. Can be combined.
