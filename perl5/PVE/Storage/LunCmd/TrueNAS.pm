@@ -3,7 +3,7 @@ package PVE::Storage::LunCmd::TrueNAS;
 use strict;
 use warnings;
 use Carp qw(croak);
-use JSON::MaybeXS qw(decode_json);
+use JSON qw(decode_json);
 use PVE::Tools qw(run_command);
 use PVE::SafeSyslog qw(syslog);
 
