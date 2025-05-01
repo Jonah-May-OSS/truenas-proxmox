@@ -198,7 +198,7 @@ Latest nightly:
 
 ## Migrate from freenas-proxmox
 
-<details><summary>If you are migrating from freenas-proxmox and want to migrate the existing ZFS over iSCSI storage volumes, do the following:</summary>
+<details><summary>If you are migrating from freenas-proxmox, do the following:</summary>
 
 * Remove freenas-proxmox on each node
 ```
