@@ -14,6 +14,14 @@ Latest nightly:
 
 [![Latest nightly version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox-snapshots/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox-snapshots/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
 
+## Useful Links
+
+### [Main Wiki](https://github.com/Jonah-May-OSS/truenas-proxmox/wiki)
+
+### [Activity](https://github.com/Jonah-May-OSS/truenas-proxmox/wiki/Activity)
+
+### [Roadmap](https://github.com/Jonah-May-OSS/truenas-proxmox/wiki/Roadmap)
+
 ## New Install Instructions
 
 ### Select at least one `Step 1.x` based on your preference. Can be combined.
