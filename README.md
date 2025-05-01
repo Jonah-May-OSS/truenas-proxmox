@@ -23,7 +23,9 @@ Latest nightly:
  <blockquote>
 
   <details><summary>2025-05-01</summary>
+
    - Document migrating from freenas-proxmox to truenas-proxmox
+   
   </details>
   
   <details><summary>2025-04-28</summary>
