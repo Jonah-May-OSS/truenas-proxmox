@@ -66,6 +66,10 @@ Latest nightly:
 ## Roadmap
 <details><summary>Roadmap details</summary>
 
+* Add install instructions for nightly builds
+* Port install instructions and SSH key guide to wiki to simplify readme
+* Port roadmap to wiki
+* Port activity to wiki
 * Port wiki to new fork and build it out
 * Tie testing/GA packages to GitHub releases instead of hard-coded versions in packer yaml
   * Update static references in the packer YAML
