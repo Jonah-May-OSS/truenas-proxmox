@@ -26,6 +26,7 @@ Latest nightly:
 
    - Document migrating from freenas-proxmox to truenas-proxmox
    - Apply ZFSPlugin.pm and UI tweaks via sed instead of patch files so they can be universal for versions
+   - Remove REST API custom fields for storage since it is no longer used
 
   </details>
   
