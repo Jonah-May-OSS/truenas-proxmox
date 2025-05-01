@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send dispatch request to 'truenas-proxmox-packer' repo.
-        uses: peter-evans/repository-dispatch@v1
+        uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.ACCESS_TOKEN }}
           repository: Jonah-May-OSS/truenas-proxmox-packer
