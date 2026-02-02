@@ -1,5 +1,8 @@
 # TrueNAS ZFS over iSCSI Plugin for Proxmox VE
 
+> [!WARNING]
+> This repository has been archived due to a much newer and better solution being available. I highly recommend migrating to https://github.com/WarlockSyno/TrueNAS-Proxmox-VE-Storage-Plugin
+
 Latest release:
 
 [![Latest version of 'truenas-proxmox'](https://api.cloudsmith.com/v1/badges/version/jonah-may-oss/truenas-proxmox/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/?render=true)](https://cloudsmith.io/~jonah-may-oss/repos/truenas-proxmox/packages/detail/deb/truenas-proxmox/latest/a=all;xc=main;d=debian%252Fany-version;t=binary/)
